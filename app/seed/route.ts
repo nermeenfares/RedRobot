@@ -27,6 +27,8 @@ async function seedUsers() {
       `;
     }),
   );
+  console.log('Inserting users...');
+
 
   return insertedUsers;
 }
@@ -53,6 +55,7 @@ async function seedInvoices() {
       `,
     ),
   );
+  console.log('Inserting invoices...');
 
   return insertedInvoices;
 }
@@ -78,6 +81,7 @@ async function seedCustomers() {
       `,
     ),
   );
+  console.log('Inserting customers...');
 
   return insertedCustomers;
 }
@@ -99,6 +103,7 @@ async function seedRevenue() {
       `,
     ),
   );
+  console.log('Inserting revenue...');
 
   return insertedRevenue;
 }
