@@ -1,5 +1,6 @@
-
 import { addTodo, deleteTodo, getTodos, toggleTodo } from "@/app/lib/todo-utils";
+import { revalidatePath } from 'next/cache';
+
 export default async function ServerTodo() {
   const todos = await getTodos();
 
@@ -8,6 +9,7 @@ export default async function ServerTodo() {
     const text = formData.get('text') as string;
     if (text) {
       await addTodo(text);
+      revalidatePath('/');
     }
   }
 
@@ -15,12 +17,14 @@ export default async function ServerTodo() {
     'use server';
     const id = formData.get('id') as string;
     await toggleTodo(id);
+    revalidatePath('/');
   }
 
   async function handleDelete(formData: FormData) {
     'use server';
     const id = formData.get('id') as string;
     await deleteTodo(id);
+    revalidatePath('/');
   }
 
   return (
@@ -49,15 +53,20 @@ export default async function ServerTodo() {
         {todos.map(todo => (
           <li key={todo.id} className="flex items-center justify-between p-2 border rounded">
             <div className="flex items-center">
-              <form action={handleToggle}>
+              <form action={handleToggle} className="flex items-center">
                 <input type="hidden" name="id" value={todo.id} />
-                <button type="submit" className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={todo.completed}
-                    readOnly 
-                    className="mr-2 h-4 w-4"
-                  />
+                <button 
+                  type="submit" 
+                  className="flex items-center"
+                  aria-label={todo.completed ? "Mark as incomplete" : "Mark as complete"}
+                >
+                  <span className={`inline-block mr-2 h-4 w-4 border rounded-sm ${todo.completed ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
+                    {todo.completed && (
+                      <svg viewBox="0 0 12 10" className="h-3 w-3 text-white">
+                        <path fill="currentColor" d="M10.28 1.28L4 7.56 1.72 5.28a1 1 0 00-1.41 1.41l3 3a1 1 0 001.41 0l7-7a1 1 0 00-1.41-1.41z"/>
+                      </svg>
+                    )}
+                  </span>
                   <span className={todo.completed ? 'line-through text-gray-500' : ''}>
                     {todo.text}
                   </span>
