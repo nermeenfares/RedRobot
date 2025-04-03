@@ -19,7 +19,7 @@ export default function MixedTodo() {
   useEffect(() => {
     const fetchTodos = async () => {
       try {
-        const response = await fetch('/api/todos');
+        const response = await fetch('/api/todos', {cache:'no-store'});
         const data = await response.json();
         setTodos(data);
       } catch (error) {

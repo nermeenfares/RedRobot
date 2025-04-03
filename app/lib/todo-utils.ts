@@ -13,20 +13,18 @@ type Todo = {
 
 export async function getTodos(): Promise<Todo[]> {
   try {
+    await fs.access(filePath);
     const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
-    
   } catch (error) {
-  
+   
     throw error;
   }
-
 }
 
 export async function saveTodos(todos: Todo[]): Promise<void> {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(todos, null, 2));
-  revalidatePath('/');
 }
 
 export async function addTodo(text: string): Promise<Todo> {
@@ -38,7 +36,7 @@ export async function addTodo(text: string): Promise<Todo> {
     createdAt: new Date().toISOString(),
   };
   await saveTodos([...todos, newTodo]);
-   revalidatePath('/');
+  revalidatePath('/');
   return newTodo;
 }
 
