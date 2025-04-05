@@ -11,7 +11,8 @@ export default function ClientTodo() {
   useEffect(() => {
     const savedTodos = localStorage.getItem('todos');
     if (savedTodos) {
-      setTodos(JSON.parse(savedTodos));
+      setTodos(prev => [...prev, ...JSON.parse(savedTodos)]);
+      // setTodos((prev)=>{...todos, JSON.parse(savedTodos)});
     }
   }, []);
 
