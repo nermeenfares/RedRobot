@@ -1,13 +1,9 @@
 'use client';
 
+import { Todo } from '@/types';
 import { useState, useEffect } from 'react';
 
-type Todo = {
-  id: string;
-  text: string;
-  completed: boolean;
-  createdAt: string;
-};
+
 
 export default function MixedTodo() {
   const [todos, setTodos] = useState<Todo[]>([]);

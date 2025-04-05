@@ -1,15 +1,11 @@
+"use server";
+import { Todo } from '@/types';
 import fs from 'fs/promises';
 import { revalidatePath } from 'next/cache';
 import path from 'path';
 
 const filePath = path.join(process.cwd(), 'data', 'todos.json');
 
-type Todo = {
-  id: string;
-  text: string;
-  completed: boolean;
-  createdAt: string;
-};
 
 export async function getTodos(): Promise<Todo[]> {
   try {

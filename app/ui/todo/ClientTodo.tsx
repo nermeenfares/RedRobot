@@ -1,13 +1,8 @@
 'use client';
 
+import { Todo } from '@/types';
 import { useEffect, useState } from 'react';
 
-type Todo = {
-  id: string;
-  text: string;
-  completed: boolean;
-  createdAt: string;
-};
 
 export default function ClientTodo() {
   const [todos, setTodos] = useState<Todo[]>([]);
