@@ -10,10 +10,11 @@ export default function ClientTodo() {
 
   useEffect(() => {
     const savedTodos = localStorage.getItem('todos');
-    if (savedTodos) {
+    if (!savedTodos) 
+      return
       setTodos(prev => [...prev, ...JSON.parse(savedTodos)]);
       // setTodos((prev)=>{...todos, JSON.parse(savedTodos)});
-    }
+    
   }, []);
 
   useEffect(() => {
@@ -28,21 +29,29 @@ export default function ClientTodo() {
         completed: false,
         createdAt: new Date().toISOString(),
       };
-      setTodos([...todos, newTodo]);
+      // setTodos([...todos, newTodo]);
+      // setInputValue('');
+      setTodos(prev => [...prev, newTodo]);
       setInputValue('');
     }
   };
 
   const handleToggle = (id: string) => {
-    setTodos(todos.map(todo =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+    // setTodos(todos.map(todo =>
+    //   todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    // ));
+    setTodos(prev => prev.map(t => t.id === id ? {...t, completed: !t.completed} : t));
   };
 
   const handleDelete = (id: string) => {
-    setTodos(todos.filter(todo => todo.id !== id));
+    setTodos(prev => prev.filter(t => t.id !== id));
+    // setTodos(todos.filter(todo => todo.id !== id));
   };
 
+
+  // if (isLoading) {
+  //   return <Loading size="md" />;
+  // }
   return (
     <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Client Todo App</h1>
