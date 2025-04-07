@@ -1,8 +1,8 @@
 'use client';
 
-import Loading from '@/app/dashboard/(overview)/loading';
 import { Todo } from '@/types';
 import { useState, useEffect } from 'react';
+import Loading from './loadingIndicator';
 
 
 
@@ -16,9 +16,13 @@ export default function MixedTodo() {
   useEffect(() => {
     const fetchTodos = async () => {
       try {
+        setIsLoading(true)
+
         const response = await fetch('/api/todos', {cache:'no-store'});
         const data = await response.json();
         setTodos(data);
+        setIsLoading(false)
+
       } catch (error) {
         console.error('Error fetching todos:', error);
       } finally {
@@ -32,6 +36,8 @@ export default function MixedTodo() {
   const handleAdd = async () => {
     if (inputValue.trim()) {
       try {
+        setIsLoading(true)
+
         const response = await fetch('/api/todos', {
           method: 'POST',
           headers: {
@@ -43,6 +49,8 @@ export default function MixedTodo() {
         const newTodo = await response.json();
         setTodos([...todos, newTodo]);
         setInputValue('');
+        setIsLoading(false)
+
       } catch (error) {
         console.error('Error adding todo:', error);
       }
@@ -51,6 +59,8 @@ export default function MixedTodo() {
 
   const handleToggle = async (id: string) => {
     try {
+      setIsLoading(true)
+
       await fetch('/api/todos', {
         method: 'PATCH',
         headers: {
@@ -62,6 +72,8 @@ export default function MixedTodo() {
       setTodos(todos.map(todo => 
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
       ));
+      setIsLoading(false)
+
     } catch (error) {
       console.error('Error toggling todo:', error);
     }
@@ -69,6 +81,7 @@ export default function MixedTodo() {
 
   const handleDelete = async (id: string) => {
     try {
+      setIsLoading(true)
       await fetch('/api/todos', {
         method: 'DELETE',
         headers: {
@@ -77,13 +90,22 @@ export default function MixedTodo() {
         body: JSON.stringify({ id }),
       });
       setTodos(todos.filter(todo => todo.id !== id));
+      setIsLoading(false)
+
     } catch (error) {
       console.error('Error deleting todo:', error);
     }
   };
 
 
-
+  // const [loading, setLoading] = useState(true); // Start with loading true
+  if (isLoading) {
+    return (
+      <div className="max-w-md mx-auto p-4">
+        <Loading size="md" />
+      </div>
+    );
+  }
   return (
     <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Mixed Todo App (JSON Server)</h1>

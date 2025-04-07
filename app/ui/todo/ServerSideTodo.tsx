@@ -1,4 +1,4 @@
-import { addTodo, deleteTodo, getTodos, toggleTodo } from "@/app/lib/todo-utils";
+import { addTodo, deleteTodo, getTodos, toggleTodo } from '@/app/lib/server/todo-actions';
 import { revalidatePath } from 'next/cache';
 
 export default async function ServerTodo() {
