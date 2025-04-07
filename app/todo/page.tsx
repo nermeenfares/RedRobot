@@ -15,7 +15,7 @@ export default function Page() {
       title: 'Server',
       content: (
         <Suspense fallback={<Loading size='md' />}>
-        <ServerTodo /> {/* Directly nested Server Component */}
+        <ServerTodo /> 
       </Suspense>
       ),
     },
