@@ -1,0 +1,745 @@
+diff --git a/app/ctypes.ts b/app/ctypes.ts
+new file mode 100644
+index 0000000..099832a
+--- /dev/null
++++ b/app/ctypes.ts
+@@ -0,0 +1,11 @@
++export type Todo = {
++  id: string
++  text: string
++  completed: boolean
++  createdAt: string
++}
++
++export interface ITodoApi {
++  getTodos(): Promise<Todo[]>
++  addTodo(prev: Todo[], text: string): Promise<Todo>
++}
+diff --git a/app/lib/client/todo-utils.ts b/app/lib/client/todo-utils.ts
+index 3b0ae78..90959d9 100644
+--- a/app/lib/client/todo-utils.ts
++++ b/app/lib/client/todo-utils.ts
+@@ -1,33 +1,34 @@
+-'use client';
++"use client"
+ 
+-import type { Todo } from '@/types';
++import type { Todo } from "@/app/ctypes"
+ 
+ export const todoUtils = {
+   loadFromLocalStorage: (): Todo[] => {
+-    if (typeof window === 'undefined') return [];
+-    const saved = localStorage.getItem('todos');
+-    return saved ? JSON.parse(saved) : [];
++    if (typeof window === "undefined") return []
++    const saved = localStorage.getItem("todos")
++    return saved ? JSON.parse(saved) : []
+   },
+ 
+   saveToLocalStorage: (todos: Todo[]) => {
+-    localStorage.setItem('todos', JSON.stringify(todos));
++    localStorage.setItem("todos", JSON.stringify(todos))
+   },
+ 
+   addTodo: (todos: Todo[], text: string): Todo[] => {
+-    if (!text.trim()) return todos;
+-    return [...todos, {
+-      id: Date.now().toString(),
+-      text,
+-      completed: false,
+-      createdAt: new Date().toISOString()
+-    }];
++    if (!text.trim()) return todos
++    return [
++      ...todos,
++      {
++        id: Date.now().toString(),
++        text,
++        completed: false,
++        createdAt: new Date().toISOString(),
++      },
++    ]
+   },
+ 
+-  toggleTodo: (todos: Todo[], id: string): Todo[] => (
+-    todos.map(t => t.id === id ? {...t, completed: !t.completed} : t)
+-  ),
++  toggleTodo: (todos: Todo[], id: string): Todo[] =>
++    todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+ 
+-  deleteTodo: (todos: Todo[], id: string): Todo[] => (
+-    todos.filter(t => t.id !== id)
+-  )
+-};
+\ No newline at end of file
++  deleteTodo: (todos: Todo[], id: string): Todo[] =>
++    todos.filter((t) => t.id !== id),
++}
+diff --git a/app/lib/server/data-source.ts b/app/lib/server/data-source.ts
+index 64f1184..2737f75 100644
+--- a/app/lib/server/data-source.ts
++++ b/app/lib/server/data-source.ts
+@@ -1,103 +1,102 @@
+-import TodoModel from '@/app/mongodb/models/Todo';
+-import dbConnect from '@/app/mongodb/mongodb';
+-import { Todo } from '@/types';
+-import path from 'path';
+-import fs from 'fs/promises';
+-import { revalidatePath } from 'next/cache';
++import TodoModel from "@/app/mongodb/models/Todo"
++import dbConnect from "@/app/mongodb/mongodb"
++import { Todo } from "@/app/ctypes"
++import path from "path"
++import fs from "fs/promises"
++import { revalidatePath } from "next/cache"
+ 
+-const DATA_SOURCE_TYPE = process.env.DATA_SOURCE_TYPE || 'JSON';
++const DATA_SOURCE_TYPE = process.env.DATA_SOURCE_TYPE || "JSON"
+ 
+ const mongoOperations = {
+   getTodos: async (): Promise<Todo[]> => {
+-    await dbConnect();
+-    const todos = await TodoModel.find().sort({ createdAt: -1 });
+-    return todos.map(todo => ({
++    await dbConnect()
++    const todos = await TodoModel.find().sort({ createdAt: -1 })
++    return todos.map((todo) => ({
+       id: todo._id.toString(),
+       text: todo.text,
+       completed: todo.completed,
+-      createdAt: todo.createdAt.toISOString()
+-    }));
++      createdAt: todo.createdAt.toISOString(),
++    }))
+   },
+   addTodo: async (prev: Todo[], text: string): Promise<Todo> => {
+-
+-    await dbConnect();
+-    const newTodo = await TodoModel.create({ text });
++    await dbConnect()
++    const newTodo = await TodoModel.create({ text })
+     return {
+       id: newTodo._id.toString(),
+       text: newTodo.text,
+       completed: newTodo.completed,
+-      createdAt: newTodo.createdAt.toISOString()
+-    };
++      createdAt: newTodo.createdAt.toISOString(),
++    }
+   },
+ 
+-  toggleTodo: async (prev: Todo[],id: string): Promise<void> => {
+-    await dbConnect();
+-    const todo = await TodoModel.findById(id);
++  toggleTodo: async (prev: Todo[], id: string): Promise<void> => {
++    await dbConnect()
++    const todo = await TodoModel.findById(id)
+     if (todo) {
+-      todo.completed = !todo.completed;
+-      await todo.save();
++      todo.completed = !todo.completed
++      await todo.save()
+     }
+   },
+ 
+-  deleteTodo: async (prev: Todo[],id: string): Promise<void> => {
+-    await dbConnect();
+-    await TodoModel.findByIdAndDelete(id);
+-  }
+-};
++  deleteTodo: async (prev: Todo[], id: string): Promise<void> => {
++    await dbConnect()
++    await TodoModel.findByIdAndDelete(id)
++  },
++}
+ 
+-let jsonTodos: Todo[] = [];
+-const filePath = path.join(process.cwd(), 'data', 'todos.json');
++let jsonTodos: Todo[] = []
++const filePath = path.join(process.cwd(), "data", "todos.json")
+ 
+ function delay(ms: number): Promise<void> {
+-  return new Promise((resolve) => setTimeout(resolve, ms));
++  return new Promise((resolve) => setTimeout(resolve, ms))
+ }
+ 
+ const jsonOperations = {
+-  getTodos: async (): Promise<Todo[]> =>{
++  getTodos: async (): Promise<Todo[]> => {
+     try {
+-      // await delay(3000); 
+-  
+-      await fs.access(filePath);
+-      const data = await fs.readFile(filePath, 'utf-8');
+-      return JSON.parse(data);
++      // await delay(3000);
++
++      await fs.access(filePath)
++      const data = await fs.readFile(filePath, "utf-8")
++      return JSON.parse(data)
+     } catch (error) {
+-      throw error;
++      throw error
+     }
+   },
+-  saveTodos: async (todos: Todo[]): Promise<void>=> {
+-    await delay(3000); 
+-  
+-    await fs.mkdir(path.dirname(filePath), { recursive: true });
+-    await fs.writeFile(filePath, JSON.stringify(todos, null, 2));
++  saveTodos: async (todos: Todo[]): Promise<void> => {
++    await delay(3000)
++
++    await fs.mkdir(path.dirname(filePath), { recursive: true })
++    await fs.writeFile(filePath, JSON.stringify(todos, null, 2))
+   },
+- 
+-  addTodo: async (prev: Todo[], text: string): Promise<Todo>=> {
+-    const todos = await jsonOperations.getTodos();
++
++  addTodo: async (prev: Todo[], text: string): Promise<Todo> => {
++    const todos = await jsonOperations.getTodos()
+     const newTodo = {
+       id: Date.now().toString(),
+       text,
+       completed: false,
+       createdAt: new Date().toISOString(),
+-    };
+-    await jsonOperations.saveTodos([...todos, newTodo]);
+-    revalidatePath('/');
+-    return newTodo;
++    }
++    await jsonOperations.saveTodos([...todos, newTodo])
++    revalidatePath("/")
++    return newTodo
+   },
+-  toggleTodo: async (prev: Todo[], id: string): Promise<void>=> {
+-    const todos = await jsonOperations.getTodos();
+-    const updatedTodos = todos.map(todo =>
++  toggleTodo: async (prev: Todo[], id: string): Promise<void> => {
++    const todos = await jsonOperations.getTodos()
++    const updatedTodos = todos.map((todo) =>
+       todo.id === id ? { ...todo, completed: !todo.completed } : todo
+-    );
+-    await jsonOperations.saveTodos(updatedTodos);
+-    revalidatePath('/');
+-  }
+-,
+-  deleteTodo: async (prev: Todo[], id: string): Promise<void> =>{
+-    const todos = await jsonOperations.getTodos();
+-    const filteredTodos = todos.filter(todo => todo.id !== id);
+-    await jsonOperations.saveTodos(filteredTodos);
+-    revalidatePath('/');
+-  }
+-};
++    )
++    await jsonOperations.saveTodos(updatedTodos)
++    revalidatePath("/")
++  },
++  deleteTodo: async (prev: Todo[], id: string): Promise<void> => {
++    const todos = await jsonOperations.getTodos()
++    const filteredTodos = todos.filter((todo) => todo.id !== id)
++    await jsonOperations.saveTodos(filteredTodos)
++    revalidatePath("/")
++  },
++}
+ 
+-export const dataSource = DATA_SOURCE_TYPE === 'MONGODB' ? mongoOperations : jsonOperations;
+\ No newline at end of file
++export const dataSource =
++  DATA_SOURCE_TYPE === "MONGODB" ? mongoOperations : jsonOperations
+diff --git a/app/lib/server/todo-actions.ts b/app/lib/server/todo-actions.ts
+index b09cd31..c54e9bc 100644
+--- a/app/lib/server/todo-actions.ts
++++ b/app/lib/server/todo-actions.ts
+@@ -1,19 +1,22 @@
+-'use server';
+-import { dataSource } from './data-source';
+-import { Todo } from '@/types';
++"use server"
++// import { dataSource } from "./data-source"
++import { Todo } from "@/app/ctypes"
++import { TodoFactory } from "./todoFactory"
++
++const dataSource = TodoFactory.getApi()
+ 
+ export const getTodos = async (): Promise<Todo[]> => {
+-  return await dataSource.getTodos();
+-};
++  return await dataSource.getTodos()
++}
+ 
+ export const addTodo = async (text: string): Promise<Todo> => {
+-  return await dataSource.addTodo([], text);
+-};
++  return await dataSource.addTodo([], text)
++}
+ 
+ export const toggleTodo = async (id: string): Promise<void> => {
+-  await dataSource.toggleTodo([],id);
+-};
++  await dataSource.toggleTodo([], id)
++}
+ 
+ export const deleteTodo = async (id: string): Promise<void> => {
+-  await dataSource.deleteTodo([],id);
+-};
+\ No newline at end of file
++  await dataSource.deleteTodo([], id)
++}
+diff --git a/app/lib/server/todoFactory.ts b/app/lib/server/todoFactory.ts
+new file mode 100644
+index 0000000..6a5b3bc
+--- /dev/null
++++ b/app/lib/server/todoFactory.ts
+@@ -0,0 +1,14 @@
++import { ITodoApi } from "@/app/ctypes"
++import { TodoJsonApi } from "./todoJsonApi"
++import { TodoMongoApi } from "./todoMongoApi"
++
++export class TodoFactory {
++    static getApi(): ITodoApi {
++        if env.DATA_SOURCE_TYPE === "MONGODB") {
++            return new TodoJsonApi()
++        } 
++        else {
++            return new TodoMongoApi()
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/app/lib/server/todoJsonApi.ts b/app/lib/server/todoJsonApi.ts
+new file mode 100644
+index 0000000..b57f8d2
+--- /dev/null
++++ b/app/lib/server/todoJsonApi.ts
+@@ -0,0 +1,22 @@
++import { ITodoApi, Todo } from "@/app/ctypes"
++import fs from "fs/promises"
++
++export class TodoJsonApi implements ITodoApi {
++  filepath: string
++  constructor() {
++    this.filePath = path.join(process.cwd(), "data", "todos.json")
++  }
++  private _save() {}
++
++  public async getTodos(): Promise<Todo[]> {
++    try {
++      // await delay(3000);
++
++      await fs.access(this.filePath)
++      const data = await fs.readFile(filePath, "utf-8")
++      return JSON.parse(data)
++    } catch (error) {
++      throw error
++    }
++  }
++}
+diff --git a/app/lib/server/todoMongoApi.ts b/app/lib/server/todoMongoApi.ts
+new file mode 100644
+index 0000000..358e8e8
+--- /dev/null
++++ b/app/lib/server/todoMongoApi.ts
+@@ -0,0 +1,18 @@
++import TodoModel from "@/app/mongodb/models/Todo"
++import { ITodoApi, Todo } from "@/app/ctypes"
++import dbConnect from "@/app/mongodb/mongodb"
++
++export class TodoMongoApi implements ITodoApi {
++  constructor() {
++    dbConnect()
++  }
++  async getTodos(): Promise<Todo[]> {
++    const todos = await TodoModel.find().sort({ createdAt: -1 })
++    return todos.map((todo) => ({
++      id: todo._id.toString(),
++      text: todo.text,
++      completed: todo.completed,
++      createdAt: todo.createdAt.toISOString(),
++    }))
++  }
++}
+diff --git a/app/ui/todo/ClientTodo.tsx b/app/ui/todo/ClientTodo.tsx
+index 2ef89b8..b76dded 100644
+--- a/app/ui/todo/ClientTodo.tsx
++++ b/app/ui/todo/ClientTodo.tsx
+@@ -1,64 +1,66 @@
+-'use client';
++"use client"
+ 
+-import { Todo } from '@/types';
+-import { useEffect, useState } from 'react';
++import { Todo } from "@/app/ctypes"
++import { useEffect, useState } from "react"
+ 
+-const simulateDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
++const simulateDelay = (ms: number) =>
++  new Promise((resolve) => setTimeout(resolve, ms))
+ 
+ export default function ClientTodo() {
+-  const [todos, setTodos] = useState<Todo[]>([]);
+-  const [inputValue, setInputValue] = useState('');
+-  const [loading, setLoading] = useState(true); 
+-  
++  const [todos, setTodos] = useState<Todo[]>([])
++  const [inputValue, setInputValue] = useState("")
++  const [loading, setLoading] = useState(true)
+ 
+   useEffect(() => {
+     const loadTodos = async () => {
+-      await simulateDelay(1000);
+-      const savedTodos = localStorage.getItem('todos');
++      await simulateDelay(1000)
++      const savedTodos = localStorage.getItem("todos")
+       if (savedTodos) {
+-        setTodos(JSON.parse(savedTodos));
++        setTodos(JSON.parse(savedTodos))
+       }
+-      setLoading(false);
+-    };
+-    
+-    loadTodos();
+-  }, []);
++      setLoading(false)
++    }
++
++    loadTodos()
++  }, [])
+ 
+   useEffect(() => {
+-    localStorage.setItem('todos', JSON.stringify(todos));
+-  }, [todos]);
++    localStorage.setItem("todos", JSON.stringify(todos))
++  }, [todos])
+ 
+   const handleAdd = async () => {
+     if (inputValue.trim()) {
+-      setLoading(true);
+-      await simulateDelay(500); 
+-      
++      setLoading(true)
++      await simulateDelay(500)
++
+       const newTodo = {
+         id: Date.now().toString(),
+         text: inputValue,
+         completed: false,
+         createdAt: new Date().toISOString(),
+-      };
+-      
+-      setTodos(prev => [...prev, newTodo]);
+-      setInputValue('');
+-      setLoading(false);
++      }
++
++      setTodos((prev) => [...prev, newTodo])
++      setInputValue("")
++      setLoading(false)
+     }
+-  };
++  }
+ 
+   const handleToggle = async (id: string) => {
+-    setLoading(true);
+-    await simulateDelay(300);
+-    setTodos(prev => prev.map(t => t.id === id ? {...t, completed: !t.completed} : t));
+-    setLoading(false);
+-  };
++    setLoading(true)
++    await simulateDelay(300)
++    setTodos((prev) =>
++      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
++    )
++    setLoading(false)
++  }
+ 
+   const handleDelete = async (id: string) => {
+-    setLoading(true);
+-    await simulateDelay(300); 
+-    setTodos(prev => prev.filter(t => t.id !== id));
+-    setLoading(false);
+-  };
++    setLoading(true)
++    await simulateDelay(300)
++    setTodos((prev) => prev.filter((t) => t.id !== id))
++    setLoading(false)
++  }
+ 
+   // if (loading) {
+   //   return (
+@@ -77,7 +79,7 @@ export default function ClientTodo() {
+           onChange={(e) => setInputValue(e.target.value)}
+           placeholder="Add new todo"
+           className="flex-1 p-2 border rounded-l"
+-          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
++          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+           disabled={loading}
+         />
+         <button
+@@ -85,13 +87,16 @@ export default function ClientTodo() {
+           className="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 disabled:bg-gray-400"
+           disabled={loading}
+         >
+-          {loading ? 'Adding...' : 'Add'}
++          {loading ? "Adding..." : "Add"}
+         </button>
+       </div>
+ 
+       <ul className="space-y-2">
+-        {todos.map(todo => (
+-          <li key={todo.id} className="flex items-center justify-between p-2 border rounded">
++        {todos.map((todo) => (
++          <li
++            key={todo.id}
++            className="flex items-center justify-between p-2 border rounded"
++          >
+             <div className="flex items-center">
+               <input
+                 type="checkbox"
+@@ -100,7 +105,9 @@ export default function ClientTodo() {
+                 className="mr-2 h-4 w-4"
+                 disabled={loading}
+               />
+-              <span className={todo.completed ? 'line-through text-gray-500' : ''}>
++              <span
++                className={todo.completed ? "line-through text-gray-500" : ""}
++              >
+                 {todo.text}
+               </span>
+             </div>
+@@ -116,8 +123,10 @@ export default function ClientTodo() {
+       </ul>
+ 
+       {todos.length === 0 && !loading && (
+-        <p className="text-gray-500 text-center mt-4">No todos yet. Add one above!</p>
++        <p className="text-gray-500 text-center mt-4">
++          No todos yet. Add one above!
++        </p>
+       )}
+     </div>
+-  );
+-}
+\ No newline at end of file
++  )
++}
+diff --git a/app/ui/todo/MixedTodo.tsx b/app/ui/todo/MixedTodo.tsx
+index b95f1f7..b5e4bfa 100644
+--- a/app/ui/todo/MixedTodo.tsx
++++ b/app/ui/todo/MixedTodo.tsx
+@@ -1,102 +1,96 @@
+-'use client';
+-
+-import { Todo } from '@/types';
+-import { useState, useEffect } from 'react';
+-import Loading from './loadingIndicator';
+-
++"use client"
+ 
++import { Todo } from "@/app/ctypes"
++import { useState, useEffect } from "react"
++import Loading from "./loadingIndicator"
+ 
+ export default function MixedTodo() {
+-  const [todos, setTodos] = useState<Todo[]>([]);
+-  const [inputValue, setInputValue] = useState('');
++  const [todos, setTodos] = useState<Todo[]>([])
++  const [inputValue, setInputValue] = useState("")
+ 
+-
+-  const [isLoading, setIsLoading] = useState(true);
++  const [isLoading, setIsLoading] = useState(true)
+ 
+   useEffect(() => {
+     const fetchTodos = async () => {
+       try {
+         setIsLoading(true)
+ 
+-        const response = await fetch('/api/todos', {cache:'no-store'});
+-        const data = await response.json();
+-        setTodos(data);
++        const response = await fetch("/api/todos", { cache: "no-store" })
++        const data = await response.json()
++        setTodos(data)
+         setIsLoading(false)
+-
+       } catch (error) {
+-        console.error('Error fetching todos:', error);
++        console.error("Error fetching todos:", error)
+       } finally {
+-        setIsLoading(false);
++        setIsLoading(false)
+       }
+-    };
++    }
+ 
+-    fetchTodos();
+-  }, []);
++    fetchTodos()
++  }, [])
+ 
+   const handleAdd = async () => {
+     if (inputValue.trim()) {
+       try {
+         setIsLoading(true)
+ 
+-        const response = await fetch('/api/todos', {
+-          method: 'POST',
++        const response = await fetch("/api/todos", {
++          method: "POST",
+           headers: {
+-            'Content-Type': 'application/json',
++            "Content-Type": "application/json",
+           },
+           body: JSON.stringify({ text: inputValue }),
+-        });
+-        
+-        const newTodo = await response.json();
+-        setTodos([...todos, newTodo]);
+-        setInputValue('');
+-        setIsLoading(false)
++        })
+ 
++        const newTodo = await response.json()
++        setTodos([...todos, newTodo])
++        setInputValue("")
++        setIsLoading(false)
+       } catch (error) {
+-        console.error('Error adding todo:', error);
++        console.error("Error adding todo:", error)
+       }
+     }
+-  };
++  }
+ 
+   const handleToggle = async (id: string) => {
+     try {
+       setIsLoading(true)
+ 
+-      await fetch('/api/todos', {
+-        method: 'PATCH',
++      await fetch("/api/todos", {
++        method: "PATCH",
+         headers: {
+-          'Content-Type': 'application/json',
++          "Content-Type": "application/json",
+         },
+         body: JSON.stringify({ id }),
+-      });
++      })
+ 
+-      setTodos(todos.map(todo => 
+-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+-      ));
++      setTodos(
++        todos.map((todo) =>
++          todo.id === id ? { ...todo, completed: !todo.completed } : todo
++        )
++      )
+       setIsLoading(false)
+-
+     } catch (error) {
+-      console.error('Error toggling todo:', error);
++      console.error("Error toggling todo:", error)
+     }
+-  };
++  }
+ 
+   const handleDelete = async (id: string) => {
+     try {
+       setIsLoading(true)
+-      await fetch('/api/todos', {
+-        method: 'DELETE',
++      await fetch("/api/todos", {
++        method: "DELETE",
+         headers: {
+-          'Content-Type': 'application/json',
++          "Content-Type": "application/json",
+         },
+         body: JSON.stringify({ id }),
+-      });
+-      setTodos(todos.filter(todo => todo.id !== id));
++      })
++      setTodos(todos.filter((todo) => todo.id !== id))
+       setIsLoading(false)
+-
+     } catch (error) {
+-      console.error('Error deleting todo:', error);
++      console.error("Error deleting todo:", error)
+     }
+-  };
+-
++  }
+ 
+   // const [loading, setLoading] = useState(true); // Start with loading true
+   if (isLoading) {
+@@ -104,7 +98,7 @@ export default function MixedTodo() {
+       <div className="max-w-md mx-auto p-4">
+         <Loading size="md" />
+       </div>
+-    );
++    )
+   }
+   return (
+     <div className="max-w-md mx-auto p-4">
+@@ -116,7 +110,7 @@ export default function MixedTodo() {
+           onChange={(e) => setInputValue(e.target.value)}
+           placeholder="Add new todo"
+           className="flex-1 p-2 border rounded-l"
+-          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
++          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+         />
+         <button
+           onClick={handleAdd}
+@@ -127,8 +121,11 @@ export default function MixedTodo() {
+       </div>
+ 
+       <ul className="space-y-2">
+-        {todos.map(todo => (
+-          <li key={todo.id} className="flex items-center justify-between p-2 border rounded">
++        {todos.map((todo) => (
++          <li
++            key={todo.id}
++            className="flex items-center justify-between p-2 border rounded"
++          >
+             <div className="flex items-center">
+               <input
+                 type="checkbox"
+@@ -136,7 +133,9 @@ export default function MixedTodo() {
+                 onChange={() => handleToggle(todo.id)}
+                 className="mr-2 h-4 w-4"
+               />
+-              <span className={todo.completed ? 'line-through text-gray-500' : ''}>
++              <span
++                className={todo.completed ? "line-through text-gray-500" : ""}
++              >
+                 {todo.text}
+               </span>
+             </div>
+@@ -151,8 +150,10 @@ export default function MixedTodo() {
+       </ul>
+ 
+       {todos.length === 0 && !isLoading && (
+-        <p className="text-gray-500 text-center mt-4">No todos yet. Add one above!</p>
++        <p className="text-gray-500 text-center mt-4">
++          No todos yet. Add one above!
++        </p>
+       )}
+     </div>
+-  );
+-}
+\ No newline at end of file
++  )
++}
+diff --git a/types.ts b/types.ts
+deleted file mode 100644
+index ae13fa0..0000000
+--- a/types.ts
++++ /dev/null
+@@ -1,6 +0,0 @@
+-export type Todo = {
+-  id: string;
+-  text: string;
+-  completed: boolean;
+-  createdAt: string;
+-};

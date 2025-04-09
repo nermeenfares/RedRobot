@@ -1,102 +1,96 @@
-'use client';
+"use client"
 
-import { Todo } from '@/types';
-import { useState, useEffect } from 'react';
-import Loading from './loadingIndicator';
-
-
+import { Todo } from "@/app/ctypes"
+import Loading from "@/app/ui/todo/loadingIndicator"
+import { useState, useEffect } from "react"
 
 export default function MixedTodo() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [inputValue, setInputValue] = useState('');
+  const [todos, setTodos] = useState<Todo[]>([])
+  const [inputValue, setInputValue] = useState("")
 
-
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchTodos = async () => {
       try {
         setIsLoading(true)
 
-        const response = await fetch('/api/todos', {cache:'no-store'});
-        const data = await response.json();
-        setTodos(data);
+        const response = await fetch("/api/todos", { cache: "no-store" })
+        const data = await response.json()
+        setTodos(data)
         setIsLoading(false)
-
       } catch (error) {
-        console.error('Error fetching todos:', error);
+        console.error("Error fetching todos:", error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchTodos();
-  }, []);
+    fetchTodos()
+  }, [])
 
   const handleAdd = async () => {
     if (inputValue.trim()) {
       try {
         setIsLoading(true)
 
-        const response = await fetch('/api/todos', {
-          method: 'POST',
+        const response = await fetch("/api/todos", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ text: inputValue }),
-        });
-        
-        const newTodo = await response.json();
-        setTodos([...todos, newTodo]);
-        setInputValue('');
-        setIsLoading(false)
+        })
 
+        const newTodo = await response.json()
+        setTodos([...todos, newTodo])
+        setInputValue("")
+        setIsLoading(false)
       } catch (error) {
-        console.error('Error adding todo:', error);
+        console.error("Error adding todo:", error)
       }
     }
-  };
+  }
 
   const handleToggle = async (id: string) => {
     try {
       setIsLoading(true)
 
-      await fetch('/api/todos', {
-        method: 'PATCH',
+      await fetch("/api/todos", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id }),
-      });
+      })
 
-      setTodos(todos.map(todo => 
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      ));
+      setTodos(
+        todos.map((todo) =>
+          todo._id === id ? { ...todo, completed: !todo.completed } : todo
+        )
+      )
       setIsLoading(false)
-
     } catch (error) {
-      console.error('Error toggling todo:', error);
+      console.error("Error toggling todo:", error)
     }
-  };
+  }
 
   const handleDelete = async (id: string) => {
     try {
       setIsLoading(true)
-      await fetch('/api/todos', {
-        method: 'DELETE',
+      await fetch("/api/todos", {
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id }),
-      });
-      setTodos(todos.filter(todo => todo.id !== id));
+      })
+      setTodos(todos.filter((todo) => todo._id !== id))
       setIsLoading(false)
-
     } catch (error) {
-      console.error('Error deleting todo:', error);
+      console.error("Error deleting todo:", error)
     }
-  };
-
+  }
 
   // const [loading, setLoading] = useState(true); // Start with loading true
   if (isLoading) {
@@ -104,7 +98,7 @@ export default function MixedTodo() {
       <div className="max-w-md mx-auto p-4">
         <Loading size="md" />
       </div>
-    );
+    )
   }
   return (
     <div className="max-w-md mx-auto p-4">
@@ -116,7 +110,7 @@ export default function MixedTodo() {
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="Add new todo"
           className="flex-1 p-2 border rounded-l"
-          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
         />
         <button
           onClick={handleAdd}
@@ -127,8 +121,11 @@ export default function MixedTodo() {
       </div>
 
       <ul className="space-y-2">
-        {todos.map(todo => (
-          <li key={todo.id} className="flex items-center justify-between p-2 border rounded">
+        {todos.map((todo) => (
+          <li
+            key={todo._id}
+            className="flex items-center justify-between p-2 border rounded"
+          >
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -136,7 +133,9 @@ export default function MixedTodo() {
                 onChange={() => handleToggle(todo.id)}
                 className="mr-2 h-4 w-4"
               />
-              <span className={todo.completed ? 'line-through text-gray-500' : ''}>
+              <span
+                className={todo.completed ? "line-through text-gray-500" : ""}
+              >
                 {todo.text}
               </span>
             </div>
@@ -151,8 +150,10 @@ export default function MixedTodo() {
       </ul>
 
       {todos.length === 0 && !isLoading && (
-        <p className="text-gray-500 text-center mt-4">No todos yet. Add one above!</p>
+        <p className="text-gray-500 text-center mt-4">
+          No todos yet. Add one above!
+        </p>
       )}
     </div>
-  );
+  )
 }

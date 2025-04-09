@@ -1,64 +1,66 @@
-'use client';
+"use client"
 
-import { Todo } from '@/types';
-import { useEffect, useState } from 'react';
+import { Todo } from "@/app/ctypes"
+import { useEffect, useState } from "react"
 
-const simulateDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const simulateDelay = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms))
 
 export default function ClientTodo() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [loading, setLoading] = useState(true); 
-  
+  const [todos, setTodos] = useState<Todo[]>([])
+  const [inputValue, setInputValue] = useState("")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadTodos = async () => {
-      await simulateDelay(1000);
-      const savedTodos = localStorage.getItem('todos');
+      await simulateDelay(1000)
+      const savedTodos = localStorage.getItem("todos")
       if (savedTodos) {
-        setTodos(JSON.parse(savedTodos));
+        setTodos(JSON.parse(savedTodos))
       }
-      setLoading(false);
-    };
-    
-    loadTodos();
-  }, []);
+      setLoading(false)
+    }
+
+    loadTodos()
+  }, [])
 
   useEffect(() => {
-    localStorage.setItem('todos', JSON.stringify(todos));
-  }, [todos]);
+    localStorage.setItem("todos", JSON.stringify(todos))
+  }, [todos])
 
   const handleAdd = async () => {
     if (inputValue.trim()) {
-      setLoading(true);
-      await simulateDelay(500); 
-      
+      setLoading(true)
+      await simulateDelay(500)
+
       const newTodo = {
         id: Date.now().toString(),
         text: inputValue,
         completed: false,
         createdAt: new Date().toISOString(),
-      };
-      
-      setTodos(prev => [...prev, newTodo]);
-      setInputValue('');
-      setLoading(false);
+      }
+
+      setTodos((prev) => [...prev, newTodo])
+      setInputValue("")
+      setLoading(false)
     }
-  };
+  }
 
   const handleToggle = async (id: string) => {
-    setLoading(true);
-    await simulateDelay(300);
-    setTodos(prev => prev.map(t => t.id === id ? {...t, completed: !t.completed} : t));
-    setLoading(false);
-  };
+    setLoading(true)
+    await simulateDelay(300)
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+    )
+    setLoading(false)
+  }
 
   const handleDelete = async (id: string) => {
-    setLoading(true);
-    await simulateDelay(300); 
-    setTodos(prev => prev.filter(t => t.id !== id));
-    setLoading(false);
-  };
+    setLoading(true)
+    await simulateDelay(300)
+    setTodos((prev) => prev.filter((t) => t.id !== id))
+    setLoading(false)
+  }
 
   // if (loading) {
   //   return (
@@ -77,7 +79,7 @@ export default function ClientTodo() {
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="Add new todo"
           className="flex-1 p-2 border rounded-l"
-          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           disabled={loading}
         />
         <button
@@ -85,13 +87,16 @@ export default function ClientTodo() {
           className="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 disabled:bg-gray-400"
           disabled={loading}
         >
-          {loading ? 'Adding...' : 'Add'}
+          {loading ? "Adding..." : "Add"}
         </button>
       </div>
 
       <ul className="space-y-2">
-        {todos.map(todo => (
-          <li key={todo.id} className="flex items-center justify-between p-2 border rounded">
+        {todos.map((todo) => (
+          <li
+            key={todo.id}
+            className="flex items-center justify-between p-2 border rounded"
+          >
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -100,7 +105,9 @@ export default function ClientTodo() {
                 className="mr-2 h-4 w-4"
                 disabled={loading}
               />
-              <span className={todo.completed ? 'line-through text-gray-500' : ''}>
+              <span
+                className={todo.completed ? "line-through text-gray-500" : ""}
+              >
                 {todo.text}
               </span>
             </div>
@@ -116,8 +123,10 @@ export default function ClientTodo() {
       </ul>
 
       {todos.length === 0 && !loading && (
-        <p className="text-gray-500 text-center mt-4">No todos yet. Add one above!</p>
+        <p className="text-gray-500 text-center mt-4">
+          No todos yet. Add one above!
+        </p>
       )}
     </div>
-  );
+  )
 }

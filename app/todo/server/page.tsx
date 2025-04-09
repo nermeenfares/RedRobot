@@ -51,10 +51,10 @@ export default async function ServerTodo() {
 
       <ul className="space-y-2">
         {todos.map(todo => (
-          <li key={todo.id} className="flex items-center justify-between p-2 border rounded">
+          <li key={todo._id} className="flex items-center justify-between p-2 border rounded">
             <div className="flex items-center">
               <form action={handleToggle} className="flex items-center">
-                <input type="hidden" name="id" value={todo.id} />
+                <input type="hidden" name="id" value={todo._id} />
                 <button 
                   type="submit" 
                   className="flex items-center"
@@ -75,7 +75,7 @@ export default async function ServerTodo() {
             </div>
             
             <form action={handleDelete}>
-              <input type="hidden" name="id" value={todo.id} />
+              <input type="hidden" name="id" value={todo._id} />
               <button
                 type="submit"
                 className="text-red-500 hover:text-red-700"

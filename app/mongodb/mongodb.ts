@@ -1,40 +1,31 @@
-import mongoose from 'mongoose';
+import { MongoClient, Db } from 'mongodb';
 
-const MONGODB_URI = process.env.MONGODB_CONNECTION_STRING;
+const MONGODB_URI = process.env.MONGODB_CONNECTION_STRING || '';
+const DB_NAME = process.env.MONGODB_DB_NAME || 'test';
 
 if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_CONNECTION_STRING environment variable');
+  throw new Error('MONGODB_CONNECTION_STRING is not defined');
 }
 
-let cached = global.mongoose;
+let cachedDb: Db | null = null;
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
+export async function dbConnect(): Promise<Db> {
+  if (cachedDb) return cachedDb;
 
-async function dbConnect() {
-  if (cached.conn) {
-    return cached.conn;
-  }
-
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      return mongoose;
-    });
-  }
+  const client = new MongoClient(MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 30000,
+  });
 
   try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    throw e;
+    await client.connect();
+    await client.db(DB_NAME).command({ ping: 1 });
+    cachedDb = client.db(DB_NAME);
+    return cachedDb;
+  } catch (error) {
+    await client.close();
+    cachedDb = null;
+    console.error('MongoDB connection failed:', error);
+    throw new Error('Failed to connect to MongoDB');
   }
-
-  return cached.conn;
 }
-
-export default dbConnect;
