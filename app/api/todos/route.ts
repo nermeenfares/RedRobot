@@ -15,7 +15,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { text } = await request.json();
-    const newTodo = await todoApi.addTodo([], text); 
+    const newTodo = await todoApi.addTodo( text); 
     return NextResponse.json(newTodo, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to add todo' }, { status: 500 });

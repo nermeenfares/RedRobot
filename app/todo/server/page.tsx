@@ -1,31 +1,26 @@
 import { addTodo, deleteTodo, getTodos, toggleTodo } from '@/app/lib/server/todo-actions';
-import { revalidatePath } from 'next/cache';
 
 export default async function ServerTodo() {
   const todos = await getTodos();
-
   async function handleAdd(formData: FormData) {
     'use server';
     const text = formData.get('text') as string;
     if (text) {
       await addTodo(text);
-      revalidatePath('/');
-    }
+        }
   }
 
   async function handleToggle(formData: FormData) {
     'use server';
     const id = formData.get('id') as string;
     await toggleTodo(id);
-    revalidatePath('/');
-  }
+    }
 
   async function handleDelete(formData: FormData) {
     'use server';
     const id = formData.get('id') as string;
     await deleteTodo(id);
-    revalidatePath('/');
-  }
+    }
 
   return (
     <div className="max-w-md mx-auto p-4">

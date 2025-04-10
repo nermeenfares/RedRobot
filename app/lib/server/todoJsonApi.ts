@@ -1,65 +1,69 @@
-import { ITodoApi, Todo } from "@/app/ctypes";
-import fs from "fs/promises";
-import path from "path";
-import { revalidatePath } from "next/cache";
+import { ITodoApi, Todo, TodoList } from "@/app/ctypes"
+import fs from "fs/promises"
+import path from "path"
+import { createTodo, delay } from "../todoObjectHelper"
+import { SHORT_DURATION } from "../constants"
 
 export class TodoJsonApi implements ITodoApi {
-  private readonly filePath: string;
+  private readonly filePath: string
+  private data: TodoList = [] 
 
-  constructor() {
-    this.filePath = path.join(process.cwd(), "data", "todos.json");
+  constructor(filename: string) {
+    this.filePath = path.join(
+      process.cwd(),
+      process.env.DATA_FOLDER_NAME as string, 
+      filename
+    )
+    console.log("Storage path:", this.filePath)
   }
 
-  private async delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  private async saveTodos(todos: Todo[]): Promise<void> {
-    await this.delay(3000); // Simulate network delay
-    await fs.mkdir(path.dirname(this.filePath), { recursive: true });
-    await fs.writeFile(this.filePath, JSON.stringify(todos, null, 2));
-  }
-
-  // --- Public API Methods (ITodoApi Implementation) ---
-  public async getTodos(): Promise<Todo[]> {
+  public async initialize(): Promise<void> {
     try {
-      await fs.access(this.filePath);
-      const data = await fs.readFile(this.filePath, "utf-8");
-      return JSON.parse(data) as Todo[];
-    } catch (error) {
-      if (error.code === 'ENOENT') { // File doesn't exist
-        return []; // Return empty array instead of throwing
+      // Ensure directory exists
+      await fs.mkdir(path.dirname(this.filePath), { recursive: true })
+
+      // Check if file exists and is accessible
+      try {
+        await fs.access(this.filePath)
+        const fileContent = await fs.readFile(this.filePath, "utf-8")
+        this.data = JSON.parse(fileContent) as Todo[]
+      } catch {
+        // File doesn't exist - create it with empty array
+        await fs.writeFile(this.filePath, JSON.stringify([]), 'utf-8')
+        this.data = [] // Explicitly set empty array
       }
-      throw error;
+    } catch (error) {
+      console.error("Initialization failed:", error)
+      this.data = [] // Fallback to empty array
+      throw error 
     }
   }
 
-  public async addTodo(_prev: Todo[], text: string): Promise<Todo> {
-    const todos = await this.getTodos();
-    const newTodo: Todo = {
-      id: Date.now().toString(),
-      text,
-      completed: false,
-      createdAt: new Date().toISOString(),
-    };
-    await this.saveTodos([...todos, newTodo]);
-    revalidatePath("/");
-    return newTodo;
+  public async getTodos(): Promise<TodoList> {
+    return this.data
   }
 
-  public async toggleTodo( id: string): Promise<void> {
-    const todos = await this.getTodos();
-    const updatedTodos = todos.map(todo => 
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    );
-    await this.saveTodos(updatedTodos);
-    revalidatePath("/");
+  public async addTodo(text: string): Promise<TodoList> {
+    const todo = createTodo(text)
+    this.data.push(todo)
+    await this.saveTodos()
+    return this.data
   }
 
-  public async deleteTodo( id: string): Promise<void> {
-    const todos = await this.getTodos();
-    const filteredTodos = todos.filter(todo => todo.id !== id);
-    await this.saveTodos(filteredTodos);
-    revalidatePath("/");
+  public async toggleTodo(id: string): Promise<void> {
+    this.data = this.data.map(todo =>
+      todo._id === id ? { ...todo, completed: !todo.completed } : todo
+    )
+    await this.saveTodos()
+  }
+
+  public async deleteTodo(id: string): Promise<void> {
+    this.data = this.data.filter(todo => todo._id !== id)
+    await this.saveTodos()
+  }
+
+  private async saveTodos(): Promise<void> {
+    await delay(SHORT_DURATION)
+    await fs.writeFile(this.filePath, JSON.stringify(this.data, null, 2))
   }
 }

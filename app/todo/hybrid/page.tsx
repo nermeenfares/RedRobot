@@ -7,7 +7,6 @@ import { useState, useEffect } from "react"
 export default function MixedTodo() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [inputValue, setInputValue] = useState("")
-
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -31,9 +30,9 @@ export default function MixedTodo() {
 
   const handleAdd = async () => {
     if (inputValue.trim()) {
+    
       try {
         setIsLoading(true)
-
         const response = await fetch("/api/todos", {
           method: "POST",
           headers: {
@@ -41,9 +40,10 @@ export default function MixedTodo() {
           },
           body: JSON.stringify({ text: inputValue }),
         })
-
-        const newTodo = await response.json()
-        setTodos([...todos, newTodo])
+  
+        const NewTodos = await response.json()
+      
+        setTodos(prev => [...NewTodos])
         setInputValue("")
         setIsLoading(false)
       } catch (error) {
@@ -92,7 +92,6 @@ export default function MixedTodo() {
     }
   }
 
-  // const [loading, setLoading] = useState(true); // Start with loading true
   if (isLoading) {
     return (
       <div className="max-w-md mx-auto p-4">
@@ -102,7 +101,7 @@ export default function MixedTodo() {
   }
   return (
     <div className="max-w-md mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Mixed Todo App (JSON Server)</h1>
+      <h1 className="text-2xl font-bold mb-4">Hybrid Todo App </h1>
       <div className="flex mb-4">
         <input
           type="text"
@@ -130,7 +129,7 @@ export default function MixedTodo() {
               <input
                 type="checkbox"
                 checked={todo.completed}
-                onChange={() => handleToggle(todo.id)}
+                onChange={() => handleToggle(todo._id)}
                 className="mr-2 h-4 w-4"
               />
               <span
@@ -140,7 +139,7 @@ export default function MixedTodo() {
               </span>
             </div>
             <button
-              onClick={() => handleDelete(todo.id)}
+              onClick={() => handleDelete(todo._id)}
               className="text-red-500 hover:text-red-700"
             >
               Delete

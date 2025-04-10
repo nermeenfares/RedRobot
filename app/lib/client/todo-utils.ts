@@ -1,34 +1,31 @@
-"use client"
+// lib/todoLocalStorageUtils.ts
+import { Todo } from "@/app/ctypes"
+import { SHORT_DURATION } from "@/app/lib/constants"
+import { createTodo, delay } from "@/app/lib/todoObjectHelper"
 
-import type { Todo } from "@/app/ctypes"
+export const loadTodos = async (): Promise<Todo[]> => {
+  await delay(SHORT_DURATION)
+  const savedTodos = localStorage.getItem("todos")
+  return savedTodos ? JSON.parse(savedTodos) : []
+}
 
-export const todoUtils = {
-  loadFromLocalStorage: (): Todo[] => {
-    if (typeof window === "undefined") return []
-    const saved = localStorage.getItem("todos")
-    return saved ? JSON.parse(saved) : []
-  },
+export const saveTodos = (todos: Todo[]): void => {
+  localStorage.setItem("todos", JSON.stringify(todos))
+}
 
-  saveToLocalStorage: (todos: Todo[]) => {
-    localStorage.setItem("todos", JSON.stringify(todos))
-  },
+export const addTodo = async (currentTodos: Todo[], text: string): Promise<Todo[]> => {
+  await delay(SHORT_DURATION)
+  return [...currentTodos, createTodo(text)]
+}
 
-  addTodo: (todos: Todo[], text: string): Todo[] => {
-    if (!text.trim()) return todos
-    return [
-      ...todos,
-      {
-        id: Date.now().toString(),
-        text,
-        completed: false,
-        createdAt: new Date().toISOString(),
-      },
-    ]
-  },
+export const toggleTodo = async (currentTodos: Todo[], id: string): Promise<Todo[]> => {
+  await delay(SHORT_DURATION)
+  return currentTodos.map(t => 
+    t._id === id ? { ...t, completed: !t.completed } : t
+  )
+}
 
-  toggleTodo: (todos: Todo[], id: string): Todo[] =>
-    todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
-
-  deleteTodo: (todos: Todo[], id: string): Todo[] =>
-    todos.filter((t) => t.id !== id),
+export const deleteTodo = async (currentTodos: Todo[], id: string): Promise<Todo[]> => {
+  await delay(SHORT_DURATION)
+  return currentTodos.filter(t => t._id !== id)
 }

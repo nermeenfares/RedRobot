@@ -1,7 +1,7 @@
 'use server'; 
 import { z } from 'zod';
  import postgres from 'postgres';
-import { revalidatePath } from 'next/cache';
+// import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
  const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -64,7 +64,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
     }
    
     // Revalidate the cache for the invoices page and redirect the user.
-    revalidatePath('/dashboard/invoices');
+    // revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
   }
   const UpdateInvoice = FormSchema.omit({ id: true, date: true });
@@ -89,7 +89,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
       console.error(error);
     }
    
-    revalidatePath('/dashboard/invoices');
+    // revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
   }
   export async function deleteInvoice(id: string) {
@@ -97,6 +97,6 @@ export async function createInvoice(prevState: State, formData: FormData) {
    
     // Unreachable code block
     await sql`DELETE FROM invoices WHERE id = ${id}`;
-    revalidatePath('/dashboard/invoices');
+    // revalidatePath('/dashboard/invoices');
   }
   

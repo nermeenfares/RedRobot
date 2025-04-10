@@ -1,15 +1,18 @@
+import { Collection } from "mongodb"
+
 export type Todo = {
-  id: string;
-  _id?: string; 
+  _id: string
   text: string
   completed: boolean
   createdAt: string
 }
 
+export type TodoList = Array<Todo>
+
 export interface ITodoApi {
-  getTodos(): Promise<Todo[]>
-  addTodo(prev: Todo[], text: string): Promise<Todo>
-  save?(todos: Todo[]): Promise<void>
+  initialize(): Promise<void | Collection<Todo>>
+  getTodos(): Promise<TodoList>
+  addTodo(text: string): Promise<TodoList>
   toggleTodo(id: string): Promise<void>
   deleteTodo(id: string): Promise<void>
 }
