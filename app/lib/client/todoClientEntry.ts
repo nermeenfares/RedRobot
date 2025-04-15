@@ -1,5 +1,5 @@
 'use client';
 
-import { ClientTodoFactory } from "./ToDoFactory";
+import { ClientTodoFactory } from "./clientTodoFactory";
 
 export const getClientTodoApi = () => ClientTodoFactory.getApi();

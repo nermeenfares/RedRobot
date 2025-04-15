@@ -1,6 +1,6 @@
 'use client';
 import { Todo } from '@/app/ctypes';
-import { fetchTodos } from '@/app/lib/client/client-todo-utils';
+import { fetchTodos } from '@/app/lib/client/clientTodoUtils';
 import { useTodoActions } from '@/app/lib/hooks/useTodoClientActions';
 import { useState, useEffect, memo } from 'react';
 import Loading from '@/app/ui/todo/loadingIndicator';

@@ -1,14 +1,12 @@
 "use client"
 import { TodoList } from "@/app/ctypes";
-import { fetchTodos } from "@/app/lib/client/client-todo-utils";
+import { fetchTodos } from "@/app/lib/client/clientTodoUtils";
 import { useTodoActions } from "@/app/lib/hooks/useTodoClientActions";
 import AddTodoForm from "@/app/ui/todo/AddTodoForm";
 import Loading from "@/app/ui/todo/loadingIndicator";
 import { TodoItem } from "@/app/ui/todo/TodoItem";
 import { useEffect, useState } from "react";
-// import Loading from "./loadingIndicator";
-// import AddTodoForm from "./AddTodoForm";
-// import { TodoItem } from "@/app/todo/client/page";
+
 
 export default function TodoListComponent() {
     const [todos, setTodos] = useState<TodoList>([]);
