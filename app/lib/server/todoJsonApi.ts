@@ -1,8 +1,7 @@
 import { ITodoApi, Todo, TodoList } from "@/app/ctypes"
 import fs from "fs/promises"
 import path from "path"
-import { createTodo, delay } from "../todoObjectHelper"
-import { SHORT_DURATION } from "../constants"
+import { createTodo } from "../todoObjectHelper"
 
 export class TodoJsonApi implements ITodoApi {
   private readonly filePath: string
@@ -19,6 +18,13 @@ export class TodoJsonApi implements ITodoApi {
 
   public async initialize(): Promise<void> {
     try {
+      //TODOOOO
+        // does the directory exists?
+
+    // if no we create the folder
+
+    // if yes, we don't do anything
+
       // Ensure directory exists
       await fs.mkdir(path.dirname(this.filePath), { recursive: true })
 
@@ -63,7 +69,6 @@ export class TodoJsonApi implements ITodoApi {
   }
 
   private async saveTodos(): Promise<void> {
-    await delay(SHORT_DURATION)
     await fs.writeFile(this.filePath, JSON.stringify(this.data, null, 2))
   }
 }

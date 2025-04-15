@@ -1,11 +1,11 @@
 "use client"
 
-import { Todo } from "@/app/ctypes"
+import {  TodoList } from "@/app/ctypes"
 import Loading from "@/app/ui/todo/loadingIndicator"
 import { useState, useEffect } from "react"
 
 export default function MixedTodo() {
-  const [todos, setTodos] = useState<Todo[]>([])
+  const [todos, setTodos] = useState<TodoList>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(true)
 

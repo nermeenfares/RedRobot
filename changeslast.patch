@@ -1,0 +1,602 @@
+diff --git a/app/api/todos/route.ts b/app/api/todos/route.ts
+index 537e1ec..690cd29 100644
+--- a/app/api/todos/route.ts
++++ b/app/api/todos/route.ts
+@@ -1,43 +1,52 @@
+-import { TodoFactory } from '@/app/lib/server/todoFactory';
+-import { NextResponse } from 'next/server';
++import { TodoFactory } from "@/app/lib/server/todoFactory"
++import { NextResponse } from "next/server"
+ 
+-const todoApi = TodoFactory.getApi();
++const todoApi = await TodoFactory.getApi()
+ 
+ export async function GET() {
+   try {
+-    const todos = await todoApi.getTodos();
+-    return NextResponse.json(todos);
++    const todos = await todoApi.getTodos()
++    return NextResponse.json(todos)
+   } catch (error) {
+-    return NextResponse.json({ error: 'Failed to fetch todos' }, { status: 500 });
++    return NextResponse.json(
++      { error: "Failed to fetch todos" },
++      { status: 500 }
++    )
+   }
+ }
+ 
+ export async function POST(request: Request) {
+   try {
+-    const { text } = await request.json();
+-    const newTodo = await todoApi.addTodo( text); 
+-    return NextResponse.json(newTodo, { status: 201 });
++    const { text } = await request.json()
++    const newTodo = await todoApi.addTodo(text)
++    return NextResponse.json(newTodo, { status: 201 })
+   } catch (error) {
+-    return NextResponse.json({ error: 'Failed to add todo' }, { status: 500 });
++    return NextResponse.json({ error: "Failed to add todo" }, { status: 500 })
+   }
+ }
+ 
+ export async function PATCH(request: Request) {
+   try {
+-    const { id } = await request.json();
+-    await todoApi.toggleTodo( id); 
+-    return NextResponse.json({ success: true });
++    const { id } = await request.json()
++    await todoApi.toggleTodo(id)
++    return NextResponse.json({ success: true })
+   } catch (error) {
+-    return NextResponse.json({ error: 'Failed to toggle todo' }, { status: 500 });
++    return NextResponse.json(
++      { error: "Failed to toggle todo" },
++      { status: 500 }
++    )
+   }
+ }
+ 
+ export async function DELETE(request: Request) {
+   try {
+-    const { id } = await request.json();
+-    await todoApi.deleteTodo( id); 
+-    return NextResponse.json({ success: true });
++    const { id } = await request.json()
++    await todoApi.deleteTodo(id)
++    return NextResponse.json({ success: true })
+   } catch (error) {
+-    return NextResponse.json({ error: 'Failed to delete todo' }, { status: 500 });
++    return NextResponse.json(
++      { error: "Failed to delete todo" },
++      { status: 500 }
++    )
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/app/lib/server/todo-actions.ts b/app/lib/server/todo-actions.ts
+deleted file mode 100644
+index 78b1a7b..0000000
+--- a/app/lib/server/todo-actions.ts
++++ /dev/null
+@@ -1,26 +0,0 @@
+-"use server"
+-import { revalidatePath } from "next/cache";
+-import { Todo } from "@/app/ctypes"
+-import { TodoFactory } from "./todoFactory"
+-
+-const dataSource = TodoFactory.getApi()
+-
+-export const getTodos = async (): Promise<TodoList> => {
+-  return await dataSource.getTodos()
+-}
+-
+-export const addTodo = async (text: string): Promise<TodoList> => {
+-  const result = await dataSource.addTodo(text);
+-  revalidatePath('/todo/server');
+-  return result;
+-}
+-
+-export const toggleTodo = async (id: string): Promise<void> => {
+-  await dataSource.toggleTodo(id);
+-  revalidatePath('/todo/server');
+-}
+-
+-export const deleteTodo = async (id: string): Promise<void> => {
+-  await dataSource.deleteTodo(id);
+-  revalidatePath('/todo/server');
+-}
+\ No newline at end of file
+diff --git a/app/lib/server/todoFactory.ts b/app/lib/server/todoFactory.ts
+index c671e76..0588199 100644
+--- a/app/lib/server/todoFactory.ts
++++ b/app/lib/server/todoFactory.ts
+@@ -1,20 +1,36 @@
+ import { ITodoApi } from "@/app/ctypes"
+ import { TodoJsonApi } from "./todoJsonApi"
+ import { TodoMongoApi } from "./todoMongoApi"
++import { delay } from "../utils"
++import { REGULAR_DURATION } from "../constants"
+ 
+ export class TodoFactory {
+-  static getApi(): ITodoApi {
++  static async getApi(): Promise<ITodoApi> {
+     let api: ITodoApi | null = null
+ 
+     if (process.env.DATA_SOURCE_TYPE === "MONGODB") {
+       api = new TodoMongoApi()
+-      api.initialize()
+     } else {
+-      api = new TodoJsonApi('todos.json')
+-      api.initialize()
++      api = new TodoJsonApi("todos.json")
+     }
+ 
+- 
+-    return api
++    await api.initialize()
++    return this.withDelay(api, REGULAR_DURATION)
++    // return api
++  }
++
++  private static withDelay<T extends object>(api: T, delayMs: number): T {
++    return new Proxy(api, {
++      get(target, prop, receiver) {
++        const original = Reflect.get(target, prop, receiver)
++        if (typeof original === "function") {
++          return async (...args: any[]) => {
++            await delay(delayMs)
++            return original.apply(target, args)
++          }
++        }
++        return original
++      },
++    })
+   }
+ }
+ //till here
+diff --git a/app/lib/server/todoJsonApi.ts b/app/lib/server/todoJsonApi.ts
+index 54f9e8b..9a479e3 100644
+--- a/app/lib/server/todoJsonApi.ts
++++ b/app/lib/server/todoJsonApi.ts
+@@ -1,17 +1,16 @@
+ import { ITodoApi, Todo, TodoList } from "@/app/ctypes"
+ import fs from "fs/promises"
+ import path from "path"
+-import { createTodo, delay } from "../todoObjectHelper"
+-import { SHORT_DURATION } from "../constants"
++import { createTodo } from "../todoObjectHelper"
+ 
+ export class TodoJsonApi implements ITodoApi {
+   private readonly filePath: string
+-  private data: TodoList = [] 
++  private data: TodoList = []
+ 
+   constructor(filename: string) {
+     this.filePath = path.join(
+       process.cwd(),
+-      process.env.DATA_FOLDER_NAME as string, 
++      process.env.DATA_FOLDER_NAME as string,
+       filename
+     )
+     console.log("Storage path:", this.filePath)
+@@ -19,6 +18,12 @@ export class TodoJsonApi implements ITodoApi {
+ 
+   public async initialize(): Promise<void> {
+     try {
++      // does the directory exists?
++
++      // if no we create the folder
++
++      // if yes, we don't do anything
++
+       // Ensure directory exists
+       await fs.mkdir(path.dirname(this.filePath), { recursive: true })
+ 
+@@ -29,13 +34,13 @@ export class TodoJsonApi implements ITodoApi {
+         this.data = JSON.parse(fileContent) as TodoList
+       } catch {
+         // File doesn't exist - create it with empty array
+-        await fs.writeFile(this.filePath, JSON.stringify([]), 'utf-8')
++        await fs.writeFile(this.filePath, JSON.stringify([]), "utf-8")
+         this.data = [] // Explicitly set empty array
+       }
+     } catch (error) {
+       console.error("Initialization failed:", error)
+       this.data = [] // Fallback to empty array
+-      throw error 
++      throw error
+     }
+   }
+ 
+@@ -51,19 +56,18 @@ export class TodoJsonApi implements ITodoApi {
+   }
+ 
+   public async toggleTodo(id: string): Promise<void> {
+-    this.data = this.data.map(todo =>
++    this.data = this.data.map((todo) =>
+       todo._id === id ? { ...todo, completed: !todo.completed } : todo
+     )
+     await this.saveTodos()
+   }
+ 
+   public async deleteTodo(id: string): Promise<void> {
+-    this.data = this.data.filter(todo => todo._id !== id)
++    this.data = this.data.filter((todo) => todo._id !== id)
+     await this.saveTodos()
+   }
+ 
+   private async saveTodos(): Promise<void> {
+-    await delay(SHORT_DURATION)
+     await fs.writeFile(this.filePath, JSON.stringify(this.data, null, 2))
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/app/lib/server/todoMongoApi.ts b/app/lib/server/todoMongoApi.ts
+index f9b859a..ff3464e 100644
+--- a/app/lib/server/todoMongoApi.ts
++++ b/app/lib/server/todoMongoApi.ts
+@@ -4,32 +4,19 @@ import { Collection, ObjectId } from "mongodb"
+ import { createTodo, delay } from "../todoObjectHelper"
+ import { SHORT_DURATION } from "../constants"
+ 
+-
+ export class TodoMongoApi implements ITodoApi {
++  private todoCol: any
+ 
+-  constructor() {
+-    this.collection = this.initialize()
+-  }
++  constructor() {}
+ 
+-  public  async initialize() {
++  public async initialize(): Promise<void> {
+     const db = await dbConnect()
+-    return db.collection<Todo>("todos")
++    this.todoCol = db.collection<Todo>("todos")
+   }
+ 
+-  // private toTodo(doc: { _id: ObjectId } & Omit<Todo, "_id">): Todo {
+-  //   return {
+-  //     _id: doc._id.toString(),
+-  //     text: doc.text,
+-  //     completed: doc.completed,
+-  //     createdAt: doc.createdAt, // Already string from query
+-  //   }
+-  // }
+-
+-  public async getTodos(): Promise<TodoList> {
+-    delay(SHORT_DURATION)
+-    const coll = await this.collection
+-    const docs = await coll.find().toArray()
+-    return docs.map((doc) => ({
++  public async getTodos(): Promise<TodoList> {
++    const docs = await this.todoCol.find().toArray()
++    return docs.map((doc: any) => ({
+       _id: doc._id.toString(),
+       text: doc.text,
+       completed: doc.completed,
+@@ -38,36 +25,30 @@ export class TodoMongoApi implements ITodoApi {
+   }
+ 
+   public async addTodo(text: string): Promise<TodoList> {
+-    delay(SHORT_DURATION)
+-    const coll = await this.collection
+-    const todo = createTodo(text);
++    const todo = createTodo(text)
+     // MongoDB will automatically add _id (ObjectId)
+-  await coll.insertOne(todo)
+-  const todos = await coll.find().toArray();
+-
+-    // Return with string _id
+-    return todos;
++    await this.todoCol.insertOne(todo)
++    return this.getTodos()
+   }
+-  public async toggleTodo(id: string): Promise<void> {
+-    delay(SHORT_DURATION)
+-    const coll = await this.collection
+-
+-    const todo = await coll.findOne({ _id: new ObjectId(id).toString() })
+ 
+-    if (todo) {
+-      // 2. Toggle the completed status
+-      await coll.updateOne(
+-        { _id: new ObjectId(id).toString() },
+-        { $set: { completed: !todo.completed } }
+-      )
+-    }
++  public async toggleTodo(id: string): Promise<void> {
++    const _idStr = new ObjectId(id).toString()
++    // const todo = await this.todoCol.findOne({
++    //   _id: _idStr,
++    // })
++
++    // if (!todo) {
++    //   throw "todo item not found"
++    // }
++
++    // 2. Toggle the completed status
++    await this.todoCol.updateOne(
++      { _id: _idStr },
++      { $set: { completed: { $not: "$completed" } } }
++    )
+   }
+ 
+   public async deleteTodo(id: string): Promise<void> {
+-    delay(SHORT_DURATION)
+-    const coll = await this.collection
+-    await coll.deleteOne({ _id: new ObjectId(id).toString() })
++    await this.todoCol.deleteOne({ _id: new ObjectId(id).toString() })
+   }
+-  private collection: Promise<Collection<Todo>>
+-
+ }
+diff --git a/app/lib/todoObjectHelper.ts b/app/lib/todoObjectHelper.ts
+index f0363e1..46cf83d 100644
+--- a/app/lib/todoObjectHelper.ts
++++ b/app/lib/todoObjectHelper.ts
+@@ -4,7 +4,7 @@ import { Todo } from "../ctypes"
+ 
+ // export const createTodo = (text: string): Todo => {
+ //   const todo: Todo = {
+-//     _id: (++todoSequence).toString(), 
++//     _id: (++todoSequence).toString(),
+ //     completed: false,
+ //     createdAt: Date.now().toString(),
+ //     text
+@@ -13,7 +13,7 @@ import { Todo } from "../ctypes"
+ // }
+ 
+ //another optio to set the id using uuid lib
+-import { v4 as uuidv4 } from 'uuid';
++import { v4 as uuidv4 } from "uuid"
+ 
+ export const createTodo = (text: string): Todo => {
+   return {
+@@ -21,10 +21,5 @@ export const createTodo = (text: string): Todo => {
+     text,
+     completed: false,
+     createdAt: new Date().toISOString(),
+-  };
+-};
+-
+-
+-export const delay= async(ms: number): Promise<void>=> {
+-      return new Promise((resolve) => setTimeout(resolve, ms));
+-    }
+\ No newline at end of file
++  }
++}
+diff --git a/app/lib/utils.ts b/app/lib/utils.ts
+index b7f7cff..f90b904 100644
+--- a/app/lib/utils.ts
++++ b/app/lib/utils.ts
+@@ -1,57 +1,57 @@
+-import { Revenue } from './definitions';
++import { Revenue } from "./definitions"
+ 
+ export const formatCurrency = (amount: number) => {
+-  return (amount / 100).toLocaleString('en-US', {
+-    style: 'currency',
+-    currency: 'USD',
+-  });
+-};
++  return (amount / 100).toLocaleString("en-US", {
++    style: "currency",
++    currency: "USD",
++  })
++}
+ 
+ export const formatDateToLocal = (
+   dateStr: string,
+-  locale: string = 'en-US',
++  locale: string = "en-US"
+ ) => {
+-  const date = new Date(dateStr);
++  const date = new Date(dateStr)
+   const options: Intl.DateTimeFormatOptions = {
+-    day: 'numeric',
+-    month: 'short',
+-    year: 'numeric',
+-  };
+-  const formatter = new Intl.DateTimeFormat(locale, options);
+-  return formatter.format(date);
+-};
++    day: "numeric",
++    month: "short",
++    year: "numeric",
++  }
++  const formatter = new Intl.DateTimeFormat(locale, options)
++  return formatter.format(date)
++}
+ 
+ export const generateYAxis = (revenue: Revenue[]) => {
+   // Calculate what labels we need to display on the y-axis
+   // based on highest record and in 1000s
+-  const yAxisLabels = [];
+-  const highestRecord = Math.max(...revenue.map((month) => month.revenue));
+-  const topLabel = Math.ceil(highestRecord / 1000) * 1000;
++  const yAxisLabels = []
++  const highestRecord = Math.max(...revenue.map((month) => month.revenue))
++  const topLabel = Math.ceil(highestRecord / 1000) * 1000
+ 
+   for (let i = topLabel; i >= 0; i -= 1000) {
+-    yAxisLabels.push(`$${i / 1000}K`);
++    yAxisLabels.push(`$${i / 1000}K`)
+   }
+ 
+-  return { yAxisLabels, topLabel };
+-};
++  return { yAxisLabels, topLabel }
++}
+ 
+ export const generatePagination = (currentPage: number, totalPages: number) => {
+   // If the total number of pages is 7 or less,
+   // display all pages without any ellipsis.
+   if (totalPages <= 7) {
+-    return Array.from({ length: totalPages }, (_, i) => i + 1);
++    return Array.from({ length: totalPages }, (_, i) => i + 1)
+   }
+ 
+   // If the current page is among the first 3 pages,
+   // show the first 3, an ellipsis, and the last 2 pages.
+   if (currentPage <= 3) {
+-    return [1, 2, 3, '...', totalPages - 1, totalPages];
++    return [1, 2, 3, "...", totalPages - 1, totalPages]
+   }
+ 
+   // If the current page is among the last 3 pages,
+   // show the first 2, an ellipsis, and the last 3 pages.
+   if (currentPage >= totalPages - 2) {
+-    return [1, 2, '...', totalPages - 2, totalPages - 1, totalPages];
++    return [1, 2, "...", totalPages - 2, totalPages - 1, totalPages]
+   }
+ 
+   // If the current page is somewhere in the middle,
+@@ -59,11 +59,15 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
+   // another ellipsis, and the last page.
+   return [
+     1,
+-    '...',
++    "...",
+     currentPage - 1,
+     currentPage,
+     currentPage + 1,
+-    '...',
++    "...",
+     totalPages,
+-  ];
+-};
++  ]
++}
++
++export const delay = async (ms: number): Promise<void> => {
++  return new Promise((resolve) => setTimeout(resolve, ms))
++}
+diff --git a/app/todo/server/page.tsx b/app/todo/server/page.tsx
+index 30ac1ea..d4e1304 100644
+--- a/app/todo/server/page.tsx
++++ b/app/todo/server/page.tsx
+@@ -1,31 +1,17 @@
+-import { addTodo, deleteTodo, getTodos, toggleTodo } from '@/app/lib/server/todo-actions';
++import {
++  getTodos,
++  handleAdd,
++  handleDelete,
++  handleToggle,
++} from "@/app/lib/server/todoActions"
+ 
+ export default async function ServerTodo() {
+-  const todos = await getTodos();
+-  async function handleAdd(formData: FormData) {
+-    'use server';
+-    const text = formData.get('text') as string;
+-    if (text) {
+-      await addTodo(text);
+-        }
+-  }
+-
+-  async function handleToggle(formData: FormData) {
+-    'use server';
+-    const id = formData.get('id') as string;
+-    await toggleTodo(id);
+-    }
+-
+-  async function handleDelete(formData: FormData) {
+-    'use server';
+-    const id = formData.get('id') as string;
+-    await deleteTodo(id);
+-    }
++  const todos = await getTodos()
+ 
+   return (
+     <div className="max-w-md mx-auto p-4">
+       <h1 className="text-2xl font-bold mb-4">Server-Only Todo App</h1>
+-      
++
+       <form action={handleAdd} className="mb-4">
+         <div className="flex">
+           <input
+@@ -45,36 +31,51 @@ export default async function ServerTodo() {
+       </form>
+ 
+       <ul className="space-y-2">
+-        {todos.map(todo => (
+-          <li key={todo._id} className="flex items-center justify-between p-2 border rounded">
++        {todos.map((todo) => (
++          <li
++            key={todo._id}
++            className="flex items-center justify-between p-2 border rounded"
++          >
+             <div className="flex items-center">
+               <form action={handleToggle} className="flex items-center">
+                 <input type="hidden" name="id" value={todo._id} />
+-                <button 
+-                  type="submit" 
++                <button
++                  type="submit"
+                   className="flex items-center"
+-                  aria-label={todo.completed ? "Mark as incomplete" : "Mark as complete"}
++                  aria-label={
++                    todo.completed ? "Mark as incomplete" : "Mark as complete"
++                  }
+                 >
+-                  <span className={`inline-block mr-2 h-4 w-4 border rounded-sm ${todo.completed ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
++                  <span
++                    className={`inline-block mr-2 h-4 w-4 border rounded-sm ${
++                      todo.completed
++                        ? "bg-blue-500 border-blue-500"
++                        : "border-gray-300"
++                    }`}
++                  >
+                     {todo.completed && (
+                       <svg viewBox="0 0 12 10" className="h-3 w-3 text-white">
+-                        <path fill="currentColor" d="M10.28 1.28L4 7.56 1.72 5.28a1 1 0 00-1.41 1.41l3 3a1 1 0 001.41 0l7-7a1 1 0 00-1.41-1.41z"/>
++                        <path
++                          fill="currentColor"
++                          d="M10.28 1.28L4 7.56 1.72 5.28a1 1 0 00-1.41 1.41l3 3a1 1 0 001.41 0l7-7a1 1 0 00-1.41-1.41z"
++                        />
+                       </svg>
+                     )}
+                   </span>
+-                  <span className={todo.completed ? 'line-through text-gray-500' : ''}>
++                  <span
++                    className={
++                      todo.completed ? "line-through text-gray-500" : ""
++                    }
++                  >
+                     {todo.text}
+                   </span>
+                 </button>
+               </form>
+             </div>
+-            
++
+             <form action={handleDelete}>
+               <input type="hidden" name="id" value={todo._id} />
+-              <button
+-                type="submit"
+-                className="text-red-500 hover:text-red-700"
+-              >
++              <button type="submit" className="text-red-500 hover:text-red-700">
+                 Delete
+               </button>
+             </form>
+@@ -83,8 +84,10 @@ export default async function ServerTodo() {
+       </ul>
+ 
+       {todos.length === 0 && (
+-        <p className="text-gray-500 text-center mt-4">No todos yet. Add one above!</p>
++        <p className="text-gray-500 text-center mt-4">
++          No todos yet. Add one above!
++        </p>
+       )}
+     </div>
+-  );
+-}
+\ No newline at end of file
++  )
++}

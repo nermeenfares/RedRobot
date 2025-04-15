@@ -1,18 +1,42 @@
-// app/components/submit-button.tsx
-'use client';
+// 'use client';
 
-import { useFormStatus } from 'react-dom';
+// import { useFormStatus, useFormState } from 'react-dom';
+// import { handleAdd } from '@/app/lib/server/todoActions';
 
-export function SubmitButton({ children }: { children: React.ReactNode }) {
-  const { pending } = useFormStatus();
+// export function SubmitButton() {
+//   const { pending } = useFormStatus();
+  
+//   return (
+//     <button
+//       type="submit"
+//       disabled={pending}
+//       className={`bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600 ${
+//         pending ? 'opacity-50' : ''
+//       }`}
+//     >
+//       {pending ? 'Adding...' : 'Add'}
+//     </button>
+//   );
+// }
 
-  return (
-    <button 
-      type="submit" 
-      disabled={pending}
-      className={`px-4 py-2 rounded ${pending ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
-    >
-      {pending ? 'Processing...' : children}
-    </button>
-  );
-}
+// export function AddTodoForm() {
+//   const [state, formAction] = useFormState(handleAdd, null);
+
+//   return (
+//     <form action={formAction} className="mb-4">
+//       <div className="flex">
+//         <input
+//           type="text"
+//           name="text"
+//           placeholder="Add new todo"
+//           className="flex-1 p-2 border rounded-l"
+//           required
+//         />
+//         <SubmitButton />
+//       </div>
+//       {state?.message && (
+//         <p className="mt-2 text-sm text-green-600">{state.message}</p>
+//       )}
+//     </form>
+//   );
+// }

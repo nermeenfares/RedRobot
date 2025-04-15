@@ -1,35 +1,28 @@
 import { ITodoApi, Todo, TodoList } from "@/app/ctypes"
 import { dbConnect } from "@/app/mongodb/mongodb"
-import { Collection, ObjectId } from "mongodb"
-import { createTodo, delay } from "../todoObjectHelper"
-import { SHORT_DURATION } from "../constants"
+import {  ObjectId } from "mongodb"
+import { createTodo } from "../todoObjectHelper"
 
 
 export class TodoMongoApi implements ITodoApi {
-
+  private todoCol: any
+ 
   constructor() {
-    this.collection = this.initialize()
   }
 
   public  async initialize() {
     const db = await dbConnect()
-    return db.collection<Todo>("todos")
+    // return db.collection<Todo>("todos")
+        this.todoCol = db.collection<Todo>("todos")
+
   }
 
-  // private toTodo(doc: { _id: ObjectId } & Omit<Todo, "_id">): Todo {
-  //   return {
-  //     _id: doc._id.toString(),
-  //     text: doc.text,
-  //     completed: doc.completed,
-  //     createdAt: doc.createdAt, // Already string from query
-  //   }
-  // }
 
-  public async getTodos(): Promise<Todo[]> {
-    delay(SHORT_DURATION)
-    const coll = await this.collection
-    const docs = await coll.find().toArray()
-    return docs.map((doc) => ({
+
+  public async getTodos(): Promise<TodoList> {
+    const docs = await this.todoCol.find().toArray()
+    return docs.map((doc: any) => ({
+   
       _id: doc._id.toString(),
       text: doc.text,
       completed: doc.completed,
@@ -37,37 +30,34 @@ export class TodoMongoApi implements ITodoApi {
     }))
   }
 
-  public async addTodo(text: string): Promise<TodoList> {
-    delay(SHORT_DURATION)
-    const coll = await this.collection
-    const todo = createTodo(text);
-    // MongoDB will automatically add _id (ObjectId)
-  await coll.insertOne(todo)
-  const todos = await coll.find().toArray();
+  
 
-    // Return with string _id
-    return todos;
+  public async addTodo(text: string): Promise<TodoList> {
+    const todo = createTodo(text);
+
+    await this.todoCol.insertOne(todo)
+        return this.getTodos()
   }
   public async toggleTodo(id: string): Promise<void> {
-    delay(SHORT_DURATION)
-    const coll = await this.collection
-
-    const todo = await coll.findOne({ _id: new ObjectId(id).toString() })
+const coll =  await this.todoCol.find().toArray()
+    const todo = await coll.findOne({ _id: this.toObjectIdString(id) })
 
     if (todo) {
       // 2. Toggle the completed status
       await coll.updateOne(
-        { _id: new ObjectId(id).toString() },
+        { _id: this.toObjectIdString(id) },
         { $set: { completed: !todo.completed } }
       )
     }
   }
 
   public async deleteTodo(id: string): Promise<void> {
-    delay(SHORT_DURATION)
-    const coll = await this.collection
-    await coll.deleteOne({ _id: new ObjectId(id).toString() })
-  }
-  private collection: Promise<Collection<Todo>>
+    // +    await this.todoCol.deleteOne({ _id: new ObjectId(id).toString() })
 
+    const coll =   await this.todoCol.find().toArray()
+    await coll.deleteOne({ _id: this.toObjectIdString(id) })
+  }
+private toObjectIdString(id:string): string {
+return new ObjectId(id).toString()
+}
 }

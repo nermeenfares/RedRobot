@@ -1,7 +1,7 @@
-import { TodoFactory } from '@/app/lib/server/todoFactory';
+import { ServerTodoFactory } from '@/app/lib/server/todoFactory';
 import { NextResponse } from 'next/server';
 
-const todoApi = TodoFactory.getApi();
+const todoApi =await  ServerTodoFactory.getApi();
 
 export async function GET() {
   try {

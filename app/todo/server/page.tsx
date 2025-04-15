@@ -1,26 +1,7 @@
-import { addTodo, deleteTodo, getTodos, toggleTodo } from '@/app/lib/server/todo-actions';
+import { getTodos, handleAdd, handleToggle, handleDelete } from '@/app/lib/server/todoActions';
 
 export default async function ServerTodo() {
   const todos = await getTodos();
-  async function handleAdd(formData: FormData) {
-    'use server';
-    const text = formData.get('text') as string;
-    if (text) {
-      await addTodo(text);
-        }
-  }
-
-  async function handleToggle(formData: FormData) {
-    'use server';
-    const id = formData.get('id') as string;
-    await toggleTodo(id);
-    }
-
-  async function handleDelete(formData: FormData) {
-    'use server';
-    const id = formData.get('id') as string;
-    await deleteTodo(id);
-    }
 
   return (
     <div className="max-w-md mx-auto p-4">
@@ -74,6 +55,7 @@ export default async function ServerTodo() {
               <button
                 type="submit"
                 className="text-red-500 hover:text-red-700"
+                aria-label="Delete todo"
               >
                 Delete
               </button>
