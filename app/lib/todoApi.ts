@@ -16,11 +16,11 @@ export async function addTodo(text: string): Promise<TodoList> {
     },
     body: JSON.stringify({ text }),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to add todo");
   }
-  
+
   return response.json();
 }
 
@@ -32,7 +32,7 @@ export async function toggleTodo(id: string): Promise<void> {
     },
     body: JSON.stringify({ id }),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to toggle todo");
   }
@@ -46,7 +46,7 @@ export async function deleteTodo(id: string): Promise<void> {
     },
     body: JSON.stringify({ id }),
   });
-  
+
   if (!response.ok) {
     throw new Error("Failed to delete todo");
   }

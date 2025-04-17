@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { TodoList } from "@/app/ctypes";
 import Loading from "@/app/ui/todo/loadingIndicator";
@@ -10,7 +10,8 @@ export default function MixedTodo() {
   const [todos, setTodos] = useState<TodoList>([]);
   const [inputValue, setInputValue] = useState("");
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const { addTodo, toggleTodo, deleteTodo, isLoading } = useTodoActions(setTodos);
+  const { addTodo, toggleTodo, deleteTodo, isLoading } =
+    useTodoActions(setTodos);
 
   useEffect(() => {
     const loadTodos = async () => {
@@ -91,7 +92,9 @@ export default function MixedTodo() {
                 className="mr-2 h-4 w-4"
                 disabled={isLoading}
               />
-              <span className={todo.completed ? "line-through text-gray-500" : ""}>
+              <span
+                className={todo.completed ? "line-through text-gray-500" : ""}
+              >
                 {todo.text}
               </span>
             </div>

@@ -1,10 +1,9 @@
-'use client';
+"use client";
 
 import { ITodoApi } from "@/app/ctypes";
 import { TodoLocalStorageApi } from "./todoLocalStorageApi";
 import { delay } from "../utils";
 import { REGULAR_DURATION } from "../constants";
-
 
 export class ClientTodoFactory {
   private static apiInstance: Promise<ITodoApi> | null = null;
@@ -22,14 +21,14 @@ export class ClientTodoFactory {
     return new Proxy(api, {
       get(target, prop, receiver) {
         const original = Reflect.get(target, prop, receiver);
-        if (typeof original === 'function') {
+        if (typeof original === "function") {
           return async (...args: any[]) => {
             await delay(delayMs);
             return original.apply(target, args);
           };
         }
         return original;
-      }
+      },
     });
   }
 }

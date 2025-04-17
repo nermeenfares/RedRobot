@@ -14,48 +14,45 @@ export class TodoLocalStorageApi implements ITodoApi {
   }
 
   async getTodos(): Promise<TodoList> {
-    return [...this.todos]; 
+    return [...this.todos];
   }
 
   async addTodo(text: string): Promise<TodoList> {
     if (!text.trim()) {
       throw new Error("Todo text cannot be empty");
     }
-    
+
     const newTodo = createTodo(text);
     this.todos = [...this.todos, newTodo];
     this.saveTodos();
-    
+
     return [...this.todos];
   }
 
   async toggleTodo(id: string): Promise<void> {
     this.validateTodoExists(id);
-    
-    this.todos = this.todos.map(todo => 
+
+    this.todos = this.todos.map((todo) =>
       todo._id === id ? { ...todo, completed: !todo.completed } : todo
     );
-    
+
     this.saveTodos();
   }
 
   async deleteTodo(id: string): Promise<void> {
     this.validateTodoExists(id);
-    
-    this.todos = this.todos.filter(todo => todo._id !== id);
-    
+
+    this.todos = this.todos.filter((todo) => todo._id !== id);
+
     this.saveTodos();
   }
-
-
 
   private validateTodoExists(id: string): void {
     if (!id) {
       throw new Error("Todo ID is required");
     }
-    
-    
-    const todoExists = this.todos.some(todo => todo._id === id);
+
+    const todoExists = this.todos.some((todo) => todo._id === id);
     if (!todoExists) {
       throw new Error(`Todo with ID ${id} not found`);
     }

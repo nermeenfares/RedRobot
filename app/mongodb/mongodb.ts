@@ -1,10 +1,10 @@
-import { MongoClient, Db } from 'mongodb';
+import { MongoClient, Db } from "mongodb";
 
-const MONGODB_URI = process.env.MONGODB_CONNECTION_STRING || '';
-const DB_NAME = process.env.MONGODB_DB_NAME || 'test';
+const MONGODB_URI = process.env.MONGODB_CONNECTION_STRING || "";
+const DB_NAME = process.env.MONGODB_DB_NAME || "test";
 
 if (!MONGODB_URI) {
-  throw new Error('MONGODB_CONNECTION_STRING is not defined');
+  throw new Error("MONGODB_CONNECTION_STRING is not defined");
 }
 
 let cachedDb: Db | null = null;
@@ -25,7 +25,7 @@ export async function dbConnect(): Promise<Db> {
   } catch (error) {
     await client.close();
     cachedDb = null;
-    console.error('MongoDB connection failed:', error);
-    throw new Error('Failed to connect to MongoDB');
+    console.error("MongoDB connection failed:", error);
+    throw new Error("Failed to connect to MongoDB");
   }
 }

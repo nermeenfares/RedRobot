@@ -1,5 +1,5 @@
-import { Todo } from "../ctypes"
-import { v4 as uuidv4 } from 'uuid';
+import { Todo } from "../ctypes";
+import { v4 as uuidv4 } from "uuid";
 
 export const createTodo = (text: string): Todo => {
   return {
@@ -9,5 +9,3 @@ export const createTodo = (text: string): Todo => {
     createdAt: new Date().toISOString(),
   };
 };
-
-
