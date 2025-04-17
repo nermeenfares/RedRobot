@@ -12,7 +12,6 @@ export class TodoMongoApi implements ITodoApi {
 
   public  async initialize() {
     const db = await dbConnect()
-    // return db.collection<Todo>("todos")
         this.todoCol = db.collection<Todo>("todos")
 
   }
@@ -43,7 +42,6 @@ const coll =  await this.todoCol.find().toArray()
     const todo = await coll.findOne({ _id: this.toObjectIdString(id) })
 
     if (todo) {
-      // 2. Toggle the completed status
       await coll.updateOne(
         { _id: this.toObjectIdString(id) },
         { $set: { completed: !todo.completed } }
@@ -52,7 +50,6 @@ const coll =  await this.todoCol.find().toArray()
   }
 
   public async deleteTodo(id: string): Promise<void> {
-    // +    await this.todoCol.deleteOne({ _id: new ObjectId(id).toString() })
 
     const coll =   await this.todoCol.find().toArray()
     await coll.deleteOne({ _id: this.toObjectIdString(id) })

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { ServerTodoFactory } from "./todoFactory";
+import { ServerTodoFactory } from "./serverTodoFactory";
 
 const todoApi = await ServerTodoFactory.getApi();
 

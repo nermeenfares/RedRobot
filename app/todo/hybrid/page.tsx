@@ -1,8 +1,9 @@
 "use client"
 
-import {  TodoList } from "@/app/ctypes"
+import { TodoList } from "@/app/ctypes"
 import Loading from "@/app/ui/todo/loadingIndicator"
 import { useState, useEffect } from "react"
+import { fetchTodos, addTodo, toggleTodo, deleteTodo } from "@/app/lib/todoApi"
 
 export default function MixedTodo() {
   const [todos, setTodos] = useState<TodoList>([])
@@ -10,14 +11,11 @@ export default function MixedTodo() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchTodos = async () => {
+    const loadTodos = async () => {
       try {
         setIsLoading(true)
-
-        const response = await fetch("/api/todos", { cache: "no-store" })
-        const data = await response.json()
+        const data = await fetchTodos()
         setTodos(data)
-        setIsLoading(false)
       } catch (error) {
         console.error("Error fetching todos:", error)
       } finally {
@@ -25,29 +23,20 @@ export default function MixedTodo() {
       }
     }
 
-    fetchTodos()
+    loadTodos()
   }, [])
 
   const handleAdd = async () => {
     if (inputValue.trim()) {
-    
       try {
         setIsLoading(true)
-        const response = await fetch("/api/todos", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ text: inputValue }),
-        })
-  
-        const NewTodos = await response.json()
-      
-        setTodos(prev => [...NewTodos])
+        const newTodos = await addTodo(inputValue)
+        setTodos(newTodos)
         setInputValue("")
-        setIsLoading(false)
       } catch (error) {
         console.error("Error adding todo:", error)
+      } finally {
+        setIsLoading(false)
       }
     }
   }
@@ -55,40 +44,28 @@ export default function MixedTodo() {
   const handleToggle = async (id: string) => {
     try {
       setIsLoading(true)
-
-      await fetch("/api/todos", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      })
-
+      await toggleTodo(id)
       setTodos(
         todos.map((todo) =>
           todo._id === id ? { ...todo, completed: !todo.completed } : todo
         )
       )
-      setIsLoading(false)
     } catch (error) {
       console.error("Error toggling todo:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
       setIsLoading(true)
-      await fetch("/api/todos", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      })
+      await deleteTodo(id)
       setTodos(todos.filter((todo) => todo._id !== id))
-      setIsLoading(false)
     } catch (error) {
       console.error("Error deleting todo:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -99,6 +76,7 @@ export default function MixedTodo() {
       </div>
     )
   }
+  
   return (
     <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Hybrid Todo App </h1>

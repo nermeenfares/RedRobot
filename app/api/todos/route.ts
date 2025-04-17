@@ -1,4 +1,4 @@
-import { ServerTodoFactory } from '@/app/lib/server/todoFactory';
+import { ServerTodoFactory } from '@/app/lib/server/serverTodoFactory';
 import { NextResponse } from 'next/server';
 
 const todoApi =await  ServerTodoFactory.getApi();

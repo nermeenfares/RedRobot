@@ -18,25 +18,24 @@ export class TodoJsonApi implements ITodoApi {
 
   public async initialize(): Promise<void> {
     try {
-      //TODOOOO
-        // does the directory exists?
-
-    // if no we create the folder
-
-    // if yes, we don't do anything
-
       // Ensure directory exists
-      await fs.mkdir(path.dirname(this.filePath), { recursive: true })
-
-      // Check if file exists and is accessible
+      const dirPath = path.dirname(this.filePath)
+      await fs.mkdir(dirPath, { recursive: true })
+      
+      // Try to read the file if it exists
       try {
-        await fs.access(this.filePath)
         const fileContent = await fs.readFile(this.filePath, "utf-8")
         this.data = JSON.parse(fileContent) as Todo[]
-      } catch {
-        // File doesn't exist - create it with empty array
-        await fs.writeFile(this.filePath, JSON.stringify([]), 'utf-8')
-        this.data = [] // Explicitly set empty array
+      } catch (error) {
+        // File doesn't exist or has invalid content - create a new one
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+          await fs.writeFile(this.filePath, JSON.stringify([]), 'utf-8')
+          console.log(`Created new todo file: ${this.filePath}`)
+          this.data = []
+        } else {
+          // Re-throw unexpected errors
+          throw error
+        }
       }
     } catch (error) {
       console.error("Initialization failed:", error)

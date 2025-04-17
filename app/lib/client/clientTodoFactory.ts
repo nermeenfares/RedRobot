@@ -5,6 +5,7 @@ import { TodoLocalStorageApi } from "./todoLocalStorageApi";
 import { delay } from "../utils";
 import { REGULAR_DURATION } from "../constants";
 
+
 export class ClientTodoFactory {
   private static apiInstance: Promise<ITodoApi> | null = null;
 

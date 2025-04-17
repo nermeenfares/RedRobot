@@ -1,7 +1,6 @@
 'use client';
 
 import { ClientTodoFactory } from "./clientTodoFactory";
-
 let todoApiInstance: ReturnType<typeof ClientTodoFactory.getApi> | null = null;
 
 const getTodoApi = async () => {
