@@ -1,59 +1,86 @@
-"use client";
+"use client"
 
-import { TodoList } from "@/app/ctypes";
-import { useCallback, useState } from "react";
+import { TodoList } from "@/app/ctypes"
+import { useCallback, useEffect, useState } from "react"
 import {
   apiAddTodo,
   apiDeleteTodo,
   apiToggleTodo,
-} from "../client/clientTodoUtils";
+  fetchTodos,
+} from "../client/clientTodoUtils"
 
-export const useTodoActions = (
-  setTodos: React.Dispatch<React.SetStateAction<TodoList>>
-) => {
-  const [isLoading, setIsLoading] = useState(false);
+export const useClientTodos = () => {
+  const [todos, setTodos] = useState<TodoList>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isBusy, setIsBusy] = useState<boolean>(false)
+  const [isDeleteOrToggling, setIsDeleteOrToggling] = useState<Array<string>>(
+    []
+  )
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setIsLoading(true)
+        const todos = await fetchTodos()
+        setTodos(todos)
+      } catch (error) {
+        console.error("Failed to load todos:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+  }, [])
 
   const addTodo = useCallback(
     async (text: string) => {
       try {
-        setIsLoading(true);
-        const updatedTodos = await apiAddTodo(text);
-        setTodos(updatedTodos);
-        return updatedTodos;
+        setIsBusy(true)
+        const updatedTodos = await apiAddTodo(text)
+        setTodos(updatedTodos)
+        return updatedTodos
       } finally {
-        setIsLoading(false);
+        setIsBusy(false)
       }
     },
     [setTodos]
-  );
+  )
 
   const toggleTodo = useCallback(
     async (id: string) => {
       try {
-        setIsLoading(true);
-        const updatedTodos = await apiToggleTodo(id);
-        setTodos(updatedTodos);
-        return updatedTodos;
+        setIsDeleteOrToggling((ids) => [...ids, id])
+        const updatedTodos = await apiToggleTodo(id)
+        setTodos(updatedTodos)
+        return updatedTodos
       } finally {
-        setIsLoading(false);
+        setIsDeleteOrToggling((ids) => ids.filter(currentId => currentId !== id))
       }
     },
     [setTodos]
-  );
+  )
 
   const deleteTodo = useCallback(
     async (id: string) => {
       try {
-        setIsLoading(true);
-        const updatedTodos = await apiDeleteTodo(id);
-        setTodos(updatedTodos);
-        return updatedTodos;
+        setIsDeleteOrToggling((ids) => [...ids, id])
+        const updatedTodos = await apiDeleteTodo(id)
+        setTodos(updatedTodos)
+        return updatedTodos
       } finally {
-        setIsLoading(false);
+        setIsDeleteOrToggling((ids) => ids.filter(currentId => currentId !== id))
       }
     },
     [setTodos]
-  );
+  )
 
-  return { addTodo, toggleTodo, deleteTodo, isLoading };
-};
+  return {
+    todos,
+    isLoading,
+    isBusy,
+    isDeleteOrToggling,
+    addTodo,
+    toggleTodo,
+    deleteTodo,
+  }
+}

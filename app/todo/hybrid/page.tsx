@@ -1,53 +1,52 @@
-"use client";
+"use client"
 
-import { TodoList } from "@/app/ctypes";
-import Loading from "@/app/ui/todo/loadingIndicator";
-import { useState, useEffect } from "react";
-import { fetchTodos } from "@/app/lib/todoApi";
-import { useTodoActions } from "@/app/lib/hooks/useTodoClientActions";
+import { TodoList } from "@/app/ctypes"
+import Loading from "@/app/ui/loading"
+import { useState, useEffect } from "react"
+import { fetchTodos } from "@/app/lib/todoApi"
+import { useClientTodos } from "@/app/lib/hooks/useTodoClientActions"
 
 export default function MixedTodo() {
-  const [todos, setTodos] = useState<TodoList>([]);
-  const [inputValue, setInputValue] = useState("");
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const { addTodo, toggleTodo, deleteTodo, isLoading } =
-    useTodoActions(setTodos);
+  // const [todos, setTodos] = useState<TodoList>([]);
+  const [inputValue, setInputValue] = useState("")
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const { todos, addTodo, toggleTodo, deleteTodo, isLoading } = useClientTodos()
 
-  useEffect(() => {
-    const loadTodos = async () => {
-      try {
-        const data = await fetchTodos();
-        setTodos(data);
-      } catch (error) {
-        console.error("Error fetching todos:", error);
-      } finally {
-        setIsInitialLoading(false);
-      }
-    };
-    loadTodos();
-  }, []);
+  // useEffect(() => {
+  //   const loadTodos = async () => {
+  //     try {
+  //       const data = await fetchTodos()
+  //       setTodos(data)
+  //     } catch (error) {
+  //       console.error("Error fetching todos:", error)
+  //     } finally {
+  //       setIsInitialLoading(false)
+  //     }
+  //   }
+  //   loadTodos()
+  // }, [])
 
   const handleAdd = async () => {
     if (inputValue.trim()) {
       try {
-        await addTodo(inputValue);
-        setInputValue("");
+        await addTodo(inputValue)
+        setInputValue("")
       } catch (error) {
-        console.error("Error adding todo:", error);
+        console.error("Error adding todo:", error)
       }
     }
-  };
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleAdd();
-  };
+    if (e.key === "Enter") handleAdd()
+  }
 
   if (isInitialLoading) {
     return (
       <div className="max-w-md mx-auto p-4">
         <Loading size="md" />
       </div>
-    );
+    )
   }
 
   return (
@@ -115,5 +114,5 @@ export default function MixedTodo() {
         </p>
       )}
     </div>
-  );
+  )
 }
