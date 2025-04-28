@@ -1,7 +1,7 @@
 "use client"
 
 import { TodoList } from "@/app/ctypes"
-import Loading from "@/app/ui/loading"
+// import Loading from "@/app/ui/loading"
 import { useState, useEffect } from "react"
 import { fetchTodos } from "@/app/lib/todoApi"
 import { useClientTodos } from "@/app/lib/hooks/useTodoClientActions"
@@ -44,7 +44,7 @@ export default function MixedTodo() {
   if (isInitialLoading) {
     return (
       <div className="max-w-md mx-auto p-4">
-        <Loading size="md" />
+        {/* <Loading size="md" /> */}
       </div>
     )
   }
@@ -73,21 +73,21 @@ export default function MixedTodo() {
 
       {isLoading && todos.length > 0 && (
         <div className="mb-2">
-          <Loading size="sm" />
+          {/* <Loading size="sm" /> */}
         </div>
       )}
 
       <ul className="space-y-2">
         {todos.map((todo) => (
           <li
-            key={todo._id}
+            key={todo.id}
             className="flex items-center justify-between p-2 border rounded"
           >
             <div className="flex items-center">
               <input
                 type="checkbox"
                 checked={todo.completed}
-                onChange={() => toggleTodo(todo._id)}
+                onChange={() => toggleTodo(todo.id)}
                 className="mr-2 h-4 w-4"
                 disabled={isLoading}
               />
@@ -98,7 +98,7 @@ export default function MixedTodo() {
               </span>
             </div>
             <button
-              onClick={() => deleteTodo(todo._id)}
+              onClick={() => deleteTodo(todo.id)}
               className="text-red-500 hover:text-red-700 disabled:text-red-300"
               disabled={isLoading}
             >

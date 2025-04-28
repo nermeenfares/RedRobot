@@ -17,7 +17,7 @@ export class ClientTodoFactory {
     return this.apiInstance
   }
 
-  private static withDelay<T extends ITodoApi>(api: T, delayMs: number): T {
+  private static withDelay<T extends ITodoApi>(api: T, delayMs: number): ITodoApi {
     return new Proxy(api, {
       get(target, prop, receiver) {
         const original = Reflect.get(target, prop, receiver)
