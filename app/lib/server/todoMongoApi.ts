@@ -1,51 +1,38 @@
-import { ITodoApi, Todo, TodoList } from "@/app/ctypes";
-import { dbConnect } from "@/app/mongodb/mongodb";
-import { ObjectId } from "mongodb";
-import { createTodo } from "../todoObjectHelper";
+import { ITodoApi, Todo, TodoList } from "@/app/ctypes"
+import { dbConnect } from "@/app/mongodb/mongodb"
+import { ObjectId } from "mongodb"
+import {
+  convertFromTodoMDB,
+  convertToTodoMDB,
+  createTodo,
+} from "../todoObjectHelper"
 
 export class TodoMongoApi implements ITodoApi {
-  private todoCol: any;
-
-  constructor() {}
+  private todoCol: any
 
   public async initialize() {
-    const db = await dbConnect();
-    this.todoCol = db.collection<Todo>("todos");
+    const db = await dbConnect()
+    this.todoCol = db.collection<Todo>("todos")
   }
 
   public async getTodos(): Promise<TodoList> {
-    const docs = await this.todoCol.find().toArray();
-    return docs.map((doc: any) => ({
-      _id: doc._id.toString(),
-      text: doc.text,
-      completed: doc.completed,
-      createdAt: doc.createdAt,
-    }));
+    const docs = await this.todoCol.find().toArray()
+    return docs.map(convertFromTodoMDB)
   }
 
   public async addTodo(text: string): Promise<TodoList> {
-    const todo = createTodo(text);
-
-    await this.todoCol.insertOne(todo);
-    return this.getTodos();
+    const todo = convertToTodoMDB(createTodo(text))
+    await this.todoCol.insertOne(todo)
+    return this.getTodos()
   }
-  public async toggleTodo(id: string): Promise<void> {
-    const coll = await this.todoCol.find().toArray();
-    const todo = await coll.findOne({ _id: this.toObjectIdString(id) });
 
-    if (todo) {
-      await coll.updateOne(
-        { _id: this.toObjectIdString(id) },
-        { $set: { completed: !todo.completed } }
-      );
-    }
+  public async toggleTodo(id: string): Promise<void> {
+    await this.todoCol.updateOne({ _id: new ObjectId(id) }, [
+      { $set: { completed: { $not: "$completed" } } },
+    ])
   }
 
   public async deleteTodo(id: string): Promise<void> {
-    const coll = await this.todoCol.find().toArray();
-    await coll.deleteOne({ _id: this.toObjectIdString(id) });
-  }
-  private toObjectIdString(id: string): string {
-    return new ObjectId(id).toString();
+    await this.todoCol.deleteOne({ _id: new ObjectId(id) })
   }
 }
