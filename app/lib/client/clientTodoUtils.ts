@@ -37,7 +37,6 @@ export const apiDeleteTodo = async (id: string) => {
   try {
     if (!id) throw new Error("Todo ID is required")
 
-    const api = await ClientTodoFactory.getApi()
     await api.deleteTodo(id)
     return await api.getTodos()
   } catch (error) {
@@ -45,3 +44,4 @@ export const apiDeleteTodo = async (id: string) => {
     throw new Error("Failed to remove todo")
   }
 }
+
