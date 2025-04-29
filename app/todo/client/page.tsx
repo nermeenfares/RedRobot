@@ -1,5 +1,5 @@
 "use client"
-import { useClientTodos } from "@/app/lib/hooks/useTodoClientActions"
+import { useTodoClientActions } from "@/app/lib/hooks/useTodoClientActions"
 import { AddTodoForm } from "@/app/ui/todo/AddTodoForm"
 import { Spinner } from "@/app/ui/loading"
 import { TodoItem } from "@/app/ui/todo/TodoItem"
@@ -13,7 +13,7 @@ export default function TodoListComponent() {
     addTodo,
     toggleTodo,
     deleteTodo,
-  } = useClientTodos()
+  } = useTodoClientActions()
 
   if (isLoading) {
     return (

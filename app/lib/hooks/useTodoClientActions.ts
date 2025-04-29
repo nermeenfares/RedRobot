@@ -9,7 +9,7 @@ import {
   fetchTodos,
 } from "../client/clientTodoUtils"
 
-export const useClientTodos = () => {
+export const useTodoClientActions = () => {
   const [todos, setTodos] = useState<TodoList>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isBusy, setIsBusy] = useState<boolean>(false)

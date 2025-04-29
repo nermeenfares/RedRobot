@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { useClientTodos } from "@/app/lib/hooks/useTodoClientActions"
+import { useState } from "react";
+import { useTodoApiActions } from "@/app/lib/hooks/useTodoApiActions"; // Changed import
 
 export default function MixedTodo() {
-  const [inputValue, setInputValue] = useState("")
+  const [inputValue, setInputValue] = useState("");
   const {
     todos,
     isLoading,
@@ -13,34 +13,34 @@ export default function MixedTodo() {
     addTodo,
     toggleTodo,
     deleteTodo
-  } = useClientTodos()
+  } = useTodoApiActions();
 
   const handleAdd = async () => {
     if (inputValue.trim()) {
       try {
-        await addTodo(inputValue)
-        setInputValue("")
+        await addTodo(inputValue);
+        setInputValue("");
       } catch (error) {
-        console.error("Error adding todo:", error)
+        console.error("Error adding todo:", error);
       }
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleAdd()
-  }
+    if (e.key === "Enter") handleAdd();
+  };
 
   if (isLoading) {
     return (
       <div className="max-w-md mx-auto p-4">
         <p>Loading todos...</p>
       </div>
-    )
+    );
   }
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Todo App</h1>
+      <h1 className="text-2xl font-bold mb-4">Hybrid Todo App</h1>
       <div className="flex mb-4">
         <input
           type="text"
@@ -95,5 +95,5 @@ export default function MixedTodo() {
         </p>
       )}
     </div>
-  )
+  );
 }
