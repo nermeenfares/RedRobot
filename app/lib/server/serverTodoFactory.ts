@@ -4,21 +4,22 @@ import { TodoMongoApi } from "./todoMongoApi"
 import { delay } from "../utils"
 import { REGULAR_DURATION } from "../constants"
 export class ServerTodoFactory {
+  private static apiInstance: ITodoApi | null = null
+
   static async getApi(): Promise<ITodoApi> {
-    let api: ITodoApi | null = null
 
     if (process.env.DATA_SOURCE_TYPE === "MONGODB") {
-      api = new TodoMongoApi()
+      this.apiInstance = new TodoMongoApi()
     } else {
-      api = new TodoJsonApi("todos.json")
+      this.apiInstance = new TodoJsonApi("todos.json")
     }
 
-    await api.initialize()
-    return this.withDelay(api, REGULAR_DURATION)
-    // return api
+    await this.apiInstance.initialize()
+    return this.withDelay(this.apiInstance, REGULAR_DURATION)
+ 
   }
 
-  private static withDelay<T extends object>(api: T, delayMs: number): T {
+  private static withDelay<T extends ITodoApi>(api: T, delayMs: number): ITodoApi {
     return new Proxy(api, {
       get(target, prop, receiver) {
         const original = Reflect.get(target, prop, receiver)

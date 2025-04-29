@@ -57,13 +57,13 @@ export class TodoJsonApi implements ITodoApi {
 
   public async toggleTodo(id: string): Promise<void> {
     this.data = this.data.map((todo) =>
-      todo._id === id ? { ...todo, completed: !todo.completed } : todo
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
     );
     await this.saveTodos();
   }
 
   public async deleteTodo(id: string): Promise<void> {
-    this.data = this.data.filter((todo) => todo._id !== id);
+    this.data = this.data.filter((todo) => todo.id !== id);
     await this.saveTodos();
   }
 
